@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timesheet</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1f2430;--mut:#6b7280;--bd:#d9dde3;--ac:#2563eb;--free:#1d9a5a;--head:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#15181d;--card:#1e2229;--tx:#e8eaed;--mut:#9aa3af;--bd:#343a44;--head:#272c35;--ac:#5b8def;--free:#2fb775}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:14px}
+h1{font-size:21px;margin:0}h2{font-size:17px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sp{flex:1}
+input{padding:9px 11px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;min-width:0}
+button{padding:8px 13px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+button.on{background:var(--tx);color:var(--bg)}
+.mut{color:var(--mut);font-size:13px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:600px;user-select:none;touch-action:none}
+th,td{border:1px solid var(--bd);text-align:center;padding:0;height:25px;font-size:11px}
+th{background:var(--head);font-size:12px;padding:3px}
+th.t{width:54px;color:var(--mut);position:sticky;left:0}
+td.c{cursor:pointer;max-width:90px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+td.busy{background:var(--ac);color:#fff}
+td.sel{outline:3px solid #f5a623;outline-offset:-3px}
+td.free{background:var(--free);color:#fff}
+td.part{background:var(--head);color:var(--mut)}
+.chip{display:inline-block;background:var(--head);border-radius:99px;padding:2px 10px;font-size:13px;margin:2px}
+.chip.ok{background:var(--free);color:#fff}
+.teams button{margin:2px}
+.code{font:700 18px ui-monospace,Consolas,monospace;letter-spacing:2px;background:var(--head);padding:2px 10px;border-radius:8px}
+details summary{cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<div class="row" style="margin-bottom:12px"><h1>🗓️ Timesheet</h1><span class="sp"></span><span id="who" class="mut"></span><button id="out" hidden>Đăng xuất</button></div>
+<div id="app"></div>
+<div id="msg" class="mut"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// >>> DÁN CẤU HÌNH SUPABASE CỦA BẠN (Project Settings → API) <<<
+const SUPABASE_URL="sb_publishable_bLd1cdU4FoDY3DgJ_NhauA_SFTojuAR";
+const SUPABASE_KEY="sb_secret_qjKGcgLQGTW0L2RMQ1v5ew_BD7C50Ae";
+
+const DAYS=["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"],H=[...Array(24).keys()];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const say=t=>{$("msg").textContent=t||""};
+let SB,user=null,view="me",ctx=null,drag=null;
+let mine=new Map(),sel=new Set(),pmode="paint";          // cá nhân
+let teams=[],team=null,members=[],busy=[],tmine=new Set(),tview="mine",dirty=false; // nhóm
+
+const uname=()=>(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email.split("@")[0];
+const K=(d,h)=>d+"-"+h;
+
+/* ---------- lưới ---------- */
+function grid(fn){
+  let s="<div class='wrap'><table id='g'><tr><th class='t'></th>"+DAYS.map(d=>"<th>"+d+"</th>").join("")+"</tr>";
+  for(const h of H){s+="<tr><th class='t'>"+h+":00</th>";
+    for(let d=0;d<7;d++){const k=K(d,h),c=fn(k);s+="<td class='c "+c.cls+"' data-k='"+k+"' title='"+esc(c.tip||"")+"'>"+esc(c.txt||"")+"</td>";}
+    s+="</tr>";}
+  return s+"</table></div>";
+}
+function refreshCell(k){const td=document.querySelector("td[data-k='"+k+"']");if(!td||!ctx)return;const c=ctx.cell(k);td.className="c "+c.cls;td.textContent=c.txt||"";td.title=c.tip||"";}
+document.addEventListener("pointerdown",e=>{const td=e.target.closest&&e.target.closest("td.c");if(!td||!ctx||!ctx.start)return;drag=ctx.start(td.dataset.k);e.preventDefault();ctx.apply(td.dataset.k,drag);});
+document.addEventListener("pointermove",e=>{if(drag===null||!ctx)return;const t=document.elementFromPoint(e.clientX,e.clientY);if(t&&t.dataset&&t.dataset.k)ctx.apply(t.dataset.k,drag);});
+document.addEventListener("pointerup",()=>{drag=null});
+
+/* ---------- đăng nhập ---------- */
+function authView(){
+  $("app").innerHTML=`<div class="card" style="max-width:380px;margin:30px auto">
+  <h2>Đăng nhập</h2>
+  <div class="row" style="flex-direction:column;align-items:stretch">
+   <button class="p" id="gg">Đăng nhập bằng Google</button>
+   <div class="mut" style="text-align:center">hoặc dùng tài khoản của app</div>
+   <input id="em" type="email" placeholder="Email"><input id="pw" type="password" placeholder="Mật khẩu (từ 6 ký tự)">
+   <div class="row"><button class="p sp" id="li">Đăng nhập</button><button class="sp" id="su">Đăng ký</button></div>
+  </div></div>`;
+  $("gg").onclick=()=>SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}});
+  $("li").onclick=async()=>{const{error}=await SB.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});if(error)say("Lỗi: "+error.message);};
+  $("su").onclick=async()=>{const{data,error}=await SB.auth.signUp({email:$("em").value.trim(),password:$("pw").value});
+    if(error)say("Lỗi: "+error.message);else if(!data.session)say("Đã đăng ký. Hãy mở email để xác nhận rồi đăng nhập.");};
+}
+
+/* ---------- khung chính ---------- */
+function shell(){
+  $("app").innerHTML=`<div class="row" style="margin-bottom:10px"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button></div>
+  <details class="card"><summary>📖 Hướng dẫn &amp; lưu ý</summary><ul>
+  <li><b>Ô xanh dương = giờ BẬN</b>, ô trống = giờ rảnh. Bấm hoặc kéo để tô.</li>
+  <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
+  <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình rồi bấm <b>Chốt lịch</b>.</li>
+  <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
+  <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></details>
+  <div id="body"></div>`;
+  $("tm").onclick=()=>{view="me";go()};$("tt").onclick=()=>{view="team";go()};
+}
+function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
+
+/* ---------- lịch cá nhân ---------- */
+async function meView(){
+  $("body").innerHTML="<div class='card'>Đang tải…</div>";
+  const{data,error}=await SB.from("personal_slots").select("*");
+  if(error){say("Lỗi tải: "+error.message);return;}
+  mine=new Map((data||[]).map(r=>[K(r.day,r.hour),r.note||""]));sel=new Set();pmode="paint";drawMe();
+}
+function drawMe(){
+  $("body").innerHTML=`<div class="card"><div class="row" style="margin-bottom:8px">
+   <button id="m1" class="${pmode==="paint"?"on":""}">Tô giờ bận</button><button id="m2" class="${pmode==="note"?"on":""}">Ghi chú</button>
+   <span class="sp"></span><button class="p" id="sv">Lưu lịch cá nhân</button></div>
+   <div class="row" id="nb" style="margin-bottom:8px;${pmode==="note"?"":"display:none"}"><input id="nt" class="sp" placeholder="Nội dung cho các ô đang chọn (viền cam)"><button id="na">Gán ghi chú</button></div>
+   ${grid(k=>ctx.cell(k))}</div>`;
+  $("m1").onclick=()=>{pmode="paint";sel=new Set();drawMe()};$("m2").onclick=()=>{pmode="note";drawMe()};
+  $("sv").onclick=saveMe;
+  $("na").onclick=()=>{const t=$("nt").value.trim();sel.forEach(k=>mine.set(k,t));sel.forEach(refreshCell);say("Đã gán ghi chú. Nhớ bấm Lưu.")};
+}
+ctx={cell:()=>({cls:""})};
+function setMeCtx(){
+  ctx={cell:k=>mine.has(k)?{cls:"busy"+(sel.has(k)?" sel":""),txt:mine.get(k),tip:mine.get(k)}:{cls:""},
+   start:k=>pmode==="paint"?!mine.has(k):!sel.has(k),
+   apply:(k,v)=>{if(pmode==="paint"){v?(mine.has(k)||mine.set(k,"")):mine.delete(k);}else if(mine.has(k)){v?sel.add(k):sel.delete(k);}refreshCell(k);}};
+}
+async function saveMe(){
+  say("Đang lưu…");
+  let r=await SB.from("personal_slots").delete().eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);
+  const rows=[...mine].map(([k,note])=>{const[d,h]=k.split("-");return{user_id:user.id,day:+d,hour:+h,note}});
+  if(rows.length){r=await SB.from("personal_slots").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
+  say("✓ Đã lưu lịch cá nhân");
+}
+
+/* ---------- lịch đội nhóm ---------- */
+async function teamView(){
+  const{data,error}=await SB.from("teams").select("*").order("created_at");
+  if(error){say("Lỗi tải: "+error.message);return;}
+  teams=data||[];
+  if(team&&!teams.find(t=>t.id===team.id))team=null;
+  team?openTeam(team.id):listTeams();
+}
+function listTeams(){
+  $("body").innerHTML=`<div class="card"><h2>Nhóm của tôi</h2><div class="teams">${teams.length?teams.map(t=>`<button data-t="${t.id}">${esc(t.name)}</button>`).join(""):"<span class='mut'>Bạn chưa có nhóm nào.</span>"}</div></div>
+  <div class="card"><h2>Tạo nhóm mới</h2><div class="row"><input id="tn" class="sp" placeholder="Tên nhóm" maxlength="60"><button class="p" id="tc">Tạo nhóm</button></div></div>
+  <div class="card"><h2>Tham gia bằng mã</h2><div class="row"><input id="jc" class="sp" placeholder="Nhập mã chia sẻ" maxlength="10"><button class="p" id="jb">Tham gia</button></div></div>`;
+  document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>openTeam(b.dataset.t));
+  $("tc").onclick=async()=>{const n=$("tn").value.trim();if(!n)return say("Hãy nhập tên nhóm.");
+    const{data,error}=await SB.rpc("create_team",{p_name:n,p_user_name:uname()});if(error)return say("Lỗi: "+error.message);team=data;teamView();};
+  $("jb").onclick=async()=>{const c=$("jc").value.trim();if(!c)return say("Hãy nhập mã.");
+    const{data,error}=await SB.rpc("join_team",{p_code:c,p_user_name:uname()});if(error)return say("Lỗi: "+error.message);team=data;teamView();};
+}
+async function openTeam(id){
+  team=teams.find(t=>t.id===id)||team;dirty=false;tview="mine";await loadTeam(true);
+}
+async function loadTeam(reset){
+  if(!team)return;
+  const[m,b]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id)]);
+  if(m.error||b.error)return say("Lỗi tải: "+(m.error||b.error).message);
+  members=m.data||[];busy=b.data||[];
+  if(reset||!dirty)tmine=new Set(busy.filter(x=>x.user_id===user.id).map(x=>K(x.day,x.hour)));
+  if(reset||view==="team")drawTeam();
+}
+const me=()=>members.find(m=>m.user_id===user.id)||{};
+function busyOf(k){const[d,h]=k.split("-");const ids=new Set(busy.filter(x=>x.day==d&&x.hour==h&&x.user_id!==user.id).map(x=>x.user_id));if(tmine.has(k))ids.add(user.id);return[...ids];}
+function drawTeam(){
+  const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all;
+  $("body").innerHTML=`<div class="card"><div class="row"><button id="bk">← Nhóm</button><h2 style="margin:0">${esc(team.name)}</h2><span class="sp"></span>Mã chia sẻ: <span class="code">${esc(team.code)}</span><button id="cp">Sao chép</button></div>
+   <div style="margin-top:8px">${members.map(m=>`<span class="chip ${m.done?"ok":""}">${esc(m.name)} ${m.done?"✓ đã chốt":"… chưa chốt"}</span>`).join("")}</div></div>
+   <div class="card"><div class="row" style="margin-bottom:8px"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button><span class="sp"></span>
+   ${tview==="mine"?`<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`:""}</div>
+   ${tview==="res"?`<p class="mut" style="margin:0 0 8px">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`:""}
+   ${grid(k=>ctx.cell(k))}
+   ${tview==="res"?`<div id="fr" style="margin-top:10px"></div>`:""}</div>`;
+  $("bk").onclick=()=>{team=null;listTeams()};
+  $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(team.code);say("Đã sao chép mã "+team.code)};
+  $("v1").onclick=()=>{tview="mine";drawTeam()};$("v2").onclick=()=>{tview="res";drawTeam()};
+  if(tview==="mine"){$("sv").onclick=()=>saveTeam(false);$("ch").onclick=()=>me().done?unchot():saveTeam(true);}
+  else showFree();
+}
+function setTeamCtx(){
+  ctx=tview==="mine"&&team&&!me().done
+   ?{cell:k=>tmine.has(k)?{cls:"busy"}:{cls:""},start:k=>!tmine.has(k),apply:(k,v)=>{v?tmine.add(k):tmine.delete(k);dirty=true;refreshCell(k);}}
+   :{cell:k=>{
+      if(tview==="mine")return tmine.has(k)?{cls:"busy"}:{cls:""};
+      const b=busyOf(k);if(!b.length)return{cls:"free",txt:"✓"};
+      return{cls:"part",txt:b.length,tip:"Bận: "+b.map(i=>(members.find(m=>m.user_id===i)||{}).name).join(", ")};}};
+}
+function showFree(){
+  let out="";
+  for(let d=0;d<7;d++){let r=[],s=null;
+    for(let h=0;h<=24;h++){const free=h<24&&!busyOf(K(d,h)).length;if(free&&s===null)s=h;if(!free&&s!==null){r.push(s+":00–"+h+":00");s=null;}}
+    if(r.length)out+="<div><b>"+DAYS[d]+":</b> "+r.join(", ")+"</div>";}
+  $("fr").innerHTML="<b>Khung giờ mọi người đều rảnh:</b>"+(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
+}
+async function saveTeam(chot){
+  say("Đang lưu…");
+  let r=await SB.from("team_busy").delete().eq("team_id",team.id).eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);
+  const rows=[...tmine].map(k=>{const[d,h]=k.split("-");return{team_id:team.id,user_id:user.id,day:+d,hour:+h}});
+  if(rows.length){r=await SB.from("team_busy").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
+  if(chot){r=await SB.from("team_members").update({done:true}).eq("team_id",team.id).eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);}
+  dirty=false;await loadTeam(true);say(chot?"✓ Đã chốt lịch":"✓ Đã lưu");
+}
+async function unchot(){
+  const r=await SB.from("team_members").update({done:false}).eq("team_id",team.id).eq("user_id",user.id);
+  if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(true);
+}
+
+/* ---------- vẽ lại theo ngữ cảnh ---------- */
+const _meView=meView,_drawMe=drawMe,_drawTeam=drawTeam;
+meView=async function(){setMeCtx();await _meView();};
+drawMe=function(){setMeCtx();_drawMe();};
+drawTeam=function(){setTeamCtx();_drawTeam();};
+
+/* ---------- khởi động ---------- */
+function start(){
+  if(SUPABASE_URL==="DAN_PROJECT_URL"){$("app").innerHTML="<div class='card'>Chưa cấu hình Supabase. Mở file index.html và dán Project URL + anon key.</div>";return;}
+  SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  $("out").onclick=()=>SB.auth.signOut();
+  SB.auth.onAuthStateChange((ev,session)=>{
+    user=session?session.user:null;
+    $("out").hidden=!user;$("who").textContent=user?uname():"";
+    if(!user){team=null;authView();return;}
+    if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();}
+  });
+  setInterval(()=>{if(user&&view==="team"&&team&&drag===null&&!dirty)loadTeam(false);},15000);
+}
+start();
+</script>
+</body>
+</html>
