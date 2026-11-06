@@ -47,6 +47,8 @@ td.busy,td.busy:hover{background:var(--ac);color:#fff}
 td.sel{outline:3px solid #f59e0b;outline-offset:-3px}
 td.free,td.free:hover{background:var(--free);color:#fff;font-weight:700}
 td.part,td.part:hover{background:var(--head);color:var(--mut);font-weight:600}
+.nav{margin-bottom:12px}.nav input{padding:7px 10px}.nav b{font-size:14px;margin-left:4px}
+th.today{color:var(--ac)}th.selday{background:var(--acs)}th small{font-weight:500;color:var(--mut);font-size:11px}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:0 0 10px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
 .chip{display:inline-block;background:var(--head);border-radius:99px;padding:3px 12px;font-size:13px;margin:3px 3px 0 0}
@@ -88,23 +90,42 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const say=t=>{$("msg").textContent=t||"";clearTimeout(say.t);if(t)say.t=setTimeout(()=>{$("msg").textContent=""},6000)};
 let SB,user=null,view="me",ctx=null,drag=null;
-let mine=new Map(),sel=new Set(),pmode="paint";          // cá nhân
+let mine=new Map(),sel=new Set(),pmode="paint",pdirty=false;          // cá nhân
 let teams=[],team=null,members=[],busy=[],tmine=new Set(),tview="mine",dirty=false; // nhóm
 
 const uname=()=>(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email.split("@")[0];
-const K=(d,h)=>d+"-"+h;
+const K=(d,h)=>d+"|"+h;
+const pad=n=>String(n).padStart(2,"0");
+const fmt=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+let weekStart=mondayOf(new Date()),selDate=fmt(new Date());
+const wkDates=()=>[...Array(7).keys()].map(i=>addD(weekStart,i));
+const wkRange=()=>[fmt(weekStart),fmt(addD(weekStart,6))];
+const dm=d=>pad(d.getDate())+"/"+pad(d.getMonth()+1);
 
 /* ---------- lưới ---------- */
 function legend(){const n="<span><i style='background:var(--head);border:1px solid var(--bd)'></i>";
   if(view==="team"&&tview==="res")return"<div class='legend'><span><i style='background:var(--free)'></i>Tất cả cùng rảnh</span>"+n+"Có người bận (số = số người)</span></div>";
   return"<div class='legend'><span><i style='background:var(--ac)'></i>Giờ bận</span>"+n+"Giờ rảnh</span></div>";}
 function grid(fn){
-  let s="<div class='wrap'><table id='g'><tr><th class='t'></th>"+DAYS.map(d=>"<th>"+d+"</th>").join("")+"</tr>";
+  const ds=wkDates(),today=fmt(new Date());
+  let s="<div class='wrap'><table id='g'><tr><th class='t'></th>"+ds.map((d,i)=>{const f=fmt(d);return"<th class='"+(f===today?"today ":"")+(f===selDate?"selday":"")+"'>"+DAYS[i]+"<br><small>"+dm(d)+"</small></th>"}).join("")+"</tr>";
   for(const h of H){s+="<tr><th class='t'>"+h+":00</th>";
-    for(let d=0;d<7;d++){const k=K(d,h),c=fn(k);s+="<td class='c "+c.cls+"' data-k='"+k+"' title='"+esc(c.tip||"")+"'>"+esc(c.txt||"")+"</td>";}
+    for(const d of ds){const k=K(fmt(d),h),c=fn(k);s+="<td class='c "+c.cls+"' data-k='"+k+"' title='"+esc(c.tip||"")+"'>"+esc(c.txt||"")+"</td>";}
     s+="</tr>";}
   return s+"</table></div>";
 }
+function navBar(){const b=addD(weekStart,6);
+  return"<div class='row nav'><button id='pw' title='Tuần trước'>‹</button><button id='tdy'>Hôm nay</button><button id='nw' title='Tuần sau'>›</button><input type='date' id='dp' value='"+selDate+"'><b>Tuần "+dm(weekStart)+" – "+dm(b)+"/"+b.getFullYear()+"</b></div>";}
+function bindNav(){
+  const to=async(ws,sd)=>{await flush();weekStart=ws;selDate=sd||fmt(ws);view==="me"?meView():loadTeam(true);};
+  $("pw").onclick=()=>to(addD(weekStart,-7));$("nw").onclick=()=>to(addD(weekStart,7));
+  $("tdy").onclick=()=>{const t=new Date();to(mondayOf(t),fmt(t))};
+  $("dp").onchange=e=>{if(e.target.value){const d=parse(e.target.value);to(mondayOf(d),e.target.value);}};
+}
+async function flush(){if(view==="me"&&pdirty)await saveMe(true);else if(view==="team"&&team&&dirty&&tview==="mine")await saveTeam(false,true);}
 function refreshCell(k){const td=document.querySelector("td[data-k='"+k+"']");if(!td||!ctx)return;const c=ctx.cell(k);td.className="c "+c.cls;td.textContent=c.txt||"";td.title=c.tip||"";}
 document.addEventListener("pointerdown",e=>{const td=e.target.closest&&e.target.closest("td.c");if(!td||!ctx||!ctx.start)return;drag=ctx.start(td.dataset.k);e.preventDefault();ctx.apply(td.dataset.k,drag);});
 document.addEventListener("pointermove",e=>{if(drag===null||!ctx)return;const t=document.elementFromPoint(e.clientX,e.clientY);if(t&&t.dataset&&t.dataset.k)ctx.apply(t.dataset.k,drag);});
@@ -135,8 +156,9 @@ function shell(){
   $("app").innerHTML=`<div class="seg" style="margin-bottom:14px"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button></div>
   <details class="card"><summary>📖 Hướng dẫn &amp; lưu ý</summary><ul>
   <li><b>Ô xanh dương = giờ BẬN</b>, ô trống = giờ rảnh. Bấm hoặc kéo để tô.</li>
+  <li>Lịch hiển thị theo <b>tuần</b>. Dùng nút ‹ ›, <b>Hôm nay</b> hoặc ô chọn ngày để chuyển tuần. Thay đổi chưa lưu sẽ tự lưu khi bạn chuyển tuần.</li>
   <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
-  <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình rồi bấm <b>Chốt lịch</b>.</li>
+  <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></details>
   <div id="body"></div>`;
@@ -147,32 +169,37 @@ function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="te
 /* ---------- lịch cá nhân ---------- */
 async function meView(){
   $("body").innerHTML="<div class='card'>Đang tải…</div>";
-  const{data,error}=await SB.from("personal_slots").select("*");
+  const[a,b]=wkRange();
+  const{data,error}=await SB.from("personal_slots").select("*").gte("slot_date",a).lte("slot_date",b);
   if(error){say("Lỗi tải: "+error.message);return;}
-  mine=new Map((data||[]).map(r=>[K(r.day,r.hour),r.note||""]));sel=new Set();pmode="paint";drawMe();
+  mine=new Map((data||[]).map(r=>[K(r.slot_date,r.hour),r.note||""]));sel=new Set();pdirty=false;drawMe();
 }
 function drawMe(){
-  $("body").innerHTML=`<div class="card"><div class="row" style="margin-bottom:8px">
+  const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
+  $("body").innerHTML=`<div class="card">${navBar()}<div class="row" style="margin-bottom:8px">
    <button id="m1" class="${pmode==="paint"?"on":""}">Tô giờ bận</button><button id="m2" class="${pmode==="note"?"on":""}">Ghi chú</button>
    <span class="sp"></span><button class="p" id="sv">Lưu lịch cá nhân</button></div>
    <div class="row" id="nb" style="margin-bottom:8px;${pmode==="note"?"":"display:none"}"><input id="nt" class="sp" placeholder="Nội dung cho các ô đang chọn (viền cam)"><button id="na">Gán ghi chú</button></div>
    ${legend()}${grid(k=>ctx.cell(k))}</div>`;
+  const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
+  bindNav();
   $("m1").onclick=()=>{pmode="paint";sel=new Set();drawMe()};$("m2").onclick=()=>{pmode="note";drawMe()};
-  $("sv").onclick=saveMe;
-  $("na").onclick=()=>{const t=$("nt").value.trim();sel.forEach(k=>mine.set(k,t));sel.forEach(refreshCell);say("Đã gán ghi chú. Nhớ bấm Lưu.")};
+  $("sv").onclick=()=>saveMe(false);
+  $("na").onclick=()=>{const t=$("nt").value.trim();sel.forEach(k=>mine.set(k,t));sel.forEach(refreshCell);pdirty=true;say("Đã gán ghi chú. Nhớ bấm Lưu.")};
 }
 ctx={cell:()=>({cls:""})};
 function setMeCtx(){
   ctx={cell:k=>mine.has(k)?{cls:"busy"+(sel.has(k)?" sel":""),txt:mine.get(k),tip:mine.get(k)}:{cls:""},
    start:k=>pmode==="paint"?!mine.has(k):!sel.has(k),
-   apply:(k,v)=>{if(pmode==="paint"){v?(mine.has(k)||mine.set(k,"")):mine.delete(k);}else if(mine.has(k)){v?sel.add(k):sel.delete(k);}refreshCell(k);}};
+   apply:(k,v)=>{if(pmode==="paint"){v?(mine.has(k)||mine.set(k,"")):mine.delete(k);pdirty=true;}else if(mine.has(k)){v?sel.add(k):sel.delete(k);}refreshCell(k);}};
 }
-async function saveMe(){
-  say("Đang lưu…");
-  let r=await SB.from("personal_slots").delete().eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);
-  const rows=[...mine].map(([k,note])=>{const[d,h]=k.split("-");return{user_id:user.id,day:+d,hour:+h,note}});
+async function saveMe(silent){
+  if(!silent)say("Đang lưu…");
+  const[a,b]=wkRange();
+  let r=await SB.from("personal_slots").delete().eq("user_id",user.id).gte("slot_date",a).lte("slot_date",b);if(r.error)return say("Lỗi: "+r.error.message);
+  const rows=[...mine].map(([k,note])=>{const[d,h]=k.split("|");return{user_id:user.id,slot_date:d,hour:+h,note}});
   if(rows.length){r=await SB.from("personal_slots").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
-  say("✓ Đã lưu lịch cá nhân");
+  pdirty=false;say(silent?"Đã tự lưu tuần vừa chỉnh":"✓ Đã lưu lịch cá nhân");
 }
 
 /* ---------- lịch đội nhóm ---------- */
@@ -198,26 +225,31 @@ async function openTeam(id){
 }
 async function loadTeam(reset){
   if(!team)return;
-  const[m,b]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id)]);
-  if(m.error||b.error)return say("Lỗi tải: "+(m.error||b.error).message);
-  members=m.data||[];busy=b.data||[];
-  if(reset||!dirty)tmine=new Set(busy.filter(x=>x.user_id===user.id).map(x=>K(x.day,x.hour)));
+  const[a,b]=wkRange();
+  const[m,z]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id).gte("slot_date",a).lte("slot_date",b)]);
+  if(m.error||z.error)return say("Lỗi tải: "+(m.error||z.error).message);
+  members=m.data||[];busy=z.data||[];
+  if(reset)dirty=false;
+  if(reset||!dirty)tmine=new Set(busy.filter(x=>x.user_id===user.id).map(x=>K(x.slot_date,x.hour)));
   if(reset||view==="team")drawTeam();
 }
 const me=()=>members.find(m=>m.user_id===user.id)||{};
-function busyOf(k){const[d,h]=k.split("-");const ids=new Set(busy.filter(x=>x.day==d&&x.hour==h&&x.user_id!==user.id).map(x=>x.user_id));if(tmine.has(k))ids.add(user.id);return[...ids];}
+function busyOf(k){const[d,h]=k.split("|");const ids=new Set(busy.filter(x=>x.slot_date===d&&x.hour==h&&x.user_id!==user.id).map(x=>x.user_id));if(tmine.has(k))ids.add(user.id);return[...ids];}
 function drawTeam(){
+  const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
   const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all;
   $("body").innerHTML=`<div class="card"><div class="row"><button id="bk">← Nhóm</button><h2 style="margin:0">${esc(team.name)}</h2><span class="sp"></span>Mã chia sẻ: <span class="code">${esc(team.code)}</span><button id="cp">Sao chép</button></div>
    <div style="margin-top:8px">${members.map(m=>`<span class="chip ${m.done?"ok":""}">${esc(m.name)} ${m.done?"✓ đã chốt":"… chưa chốt"}</span>`).join("")}</div></div>
-   <div class="card"><div class="row" style="margin-bottom:8px"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button><span class="sp"></span>
+   <div class="card">${navBar()}<div class="row" style="margin-bottom:8px"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button><span class="sp"></span>
    ${tview==="mine"?`<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`:""}</div>
    ${tview==="res"?`<p class="mut" style="margin:0 0 8px">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`:""}
    ${legend()}${grid(k=>ctx.cell(k))}
    ${tview==="res"?`<div id="fr" style="margin-top:10px"></div>`:""}</div>`;
-  $("bk").onclick=()=>{team=null;listTeams()};
+  const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
+  bindNav();
+  $("bk").onclick=async()=>{await flush();team=null;listTeams()};
   $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(team.code);say("Đã sao chép mã "+team.code)};
-  $("v1").onclick=()=>{tview="mine";drawTeam()};$("v2").onclick=()=>{tview="res";drawTeam()};
+  $("v1").onclick=async()=>{await flush();tview="mine";drawTeam()};$("v2").onclick=async()=>{await flush();tview="res";drawTeam()};
   if(tview==="mine"){$("sv").onclick=()=>saveTeam(false);$("ch").onclick=()=>me().done?unchot():saveTeam(true);}
   else showFree();
 }
@@ -231,18 +263,21 @@ function setTeamCtx(){
 }
 function showFree(){
   let out="";
-  for(let d=0;d<7;d++){let r=[],s=null;
-    for(let h=0;h<=24;h++){const free=h<24&&!busyOf(K(d,h)).length;if(free&&s===null)s=h;if(!free&&s!==null){r.push(s+":00–"+h+":00");s=null;}}
-    if(r.length)out+="<div><b>"+DAYS[d]+":</b> "+r.join(", ")+"</div>";}
-  $("fr").innerHTML="<b>Khung giờ mọi người đều rảnh:</b>"+(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
+  wkDates().forEach((dt,d)=>{const f=fmt(dt);let r=[],s=null;
+    for(let h=0;h<=24;h++){const free=h<24&&!busyOf(K(f,h)).length;if(free&&s===null)s=h;if(!free&&s!==null){r.push(s+":00–"+h+":00");s=null;}}
+    if(r.length)out+="<div><b>"+DAYS[d]+" "+dm(dt)+":</b> "+r.join(", ")+"</div>";});
+  $("fr").innerHTML="<b>Khung giờ mọi người đều rảnh trong tuần này:</b>"+(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
 }
-async function saveTeam(chot){
-  say("Đang lưu…");
-  let r=await SB.from("team_busy").delete().eq("team_id",team.id).eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);
-  const rows=[...tmine].map(k=>{const[d,h]=k.split("-");return{team_id:team.id,user_id:user.id,day:+d,hour:+h}});
+async function saveTeam(chot,silent){
+  if(!silent)say("Đang lưu…");
+  const[a,b]=wkRange();
+  let r=await SB.from("team_busy").delete().eq("team_id",team.id).eq("user_id",user.id).gte("slot_date",a).lte("slot_date",b);if(r.error)return say("Lỗi: "+r.error.message);
+  const rows=[...tmine].map(k=>{const[d,h]=k.split("|");return{team_id:team.id,user_id:user.id,slot_date:d,hour:+h}});
   if(rows.length){r=await SB.from("team_busy").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
   if(chot){r=await SB.from("team_members").update({done:true}).eq("team_id",team.id).eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);}
-  dirty=false;await loadTeam(true);say(chot?"✓ Đã chốt lịch":"✓ Đã lưu");
+  dirty=false;
+  if(silent){say("Đã tự lưu tuần vừa chỉnh");return;}
+  await loadTeam(true);say(chot?"✓ Đã chốt lịch":"✓ Đã lưu");
 }
 async function unchot(){
   const r=await SB.from("team_members").update({done:false}).eq("team_id",team.id).eq("user_id",user.id);
