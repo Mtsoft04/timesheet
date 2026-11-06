@@ -195,6 +195,14 @@ td.busy{font-weight:600}
 .cm .cb{background:var(--head);padding:7px 11px;border-radius:14px 14px 14px 4px;overflow-wrap:anywhere;white-space:pre-wrap;font-size:13.5px;line-height:1.4}
 .cm.me .cb{background:var(--ac);color:#fff;border-radius:14px 14px 4px 14px}
 .side .cin{flex-wrap:nowrap}.side .cin button{width:auto}
+
+/* ===== Lịch sử vote ===== */
+.side .pa{width:auto}
+.hi{align-items:center}
+.hi .nt .mut{font-size:12px}
+.hi .res{margin-top:2px}
+#prm .popt{cursor:default}
+#prm .pvoters{font-size:12px;white-space:normal;margin:-2px 4px 6px}
 </style>
 </head>
 <body>
@@ -306,11 +314,12 @@ function shell(){
   <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
   <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Trong lịch nhóm cũng có thể ghi chú từng khung giờ (Đi làm, Họp…). Mọi người thấy ghi chú khi rê chuột vào ô ở tab Kết quả chung. Bấm nút <b>Thành viên</b> để xem danh sách và ai đã chốt.</li>
-  <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn.</li>
+  <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn. Bình chọn đã đóng chuyển sang thẻ <b>Lịch sử vote</b> (cột phải, dưới chat) với nút <b>Xem lại</b> để xem ai đã vote gì.</li>
   <li><b>💬 Chat nhóm</b> nằm ở cột phải phía trên: mọi người trong nhóm cùng nhắn tin, mỗi tin hiện rõ tên người gửi và giờ gửi. Bấm Enter để gửi.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
+  <div class="modal" id="prm" hidden><div class="card"><div class="row"><h2 style="margin:0" id="prh"></h2><span class="sp"></span><button id="prx">Đóng</button></div><div id="prb"></div></div></div>
   <div class="modal" id="pcm" hidden><div class="card"><div class="row"><h2 style="margin:0">🗳️ Tạo bình chọn</h2><span class="sp"></span><button id="pcx">Đóng</button></div>
    <input id="pt" maxlength="120" placeholder="Tiêu đề, ví dụ: Họp nhóm vào 19h thứ Sáu?" style="width:100%;margin-top:12px">
    <div id="po"></div>
@@ -325,8 +334,10 @@ function shell(){
   $("pa1").onclick=()=>{if(document.querySelectorAll("#po .row").length>=10)return say("Tối đa 10 phương án.");addOpt("").querySelector("input").focus()};
   $("pa2").onclick=()=>{$("po").innerHTML="";addOpt("Đồng ý");addOpt("Không đồng ý");if(!$("pt").value.trim())$("pt").focus()};
   $("pgo").onclick=submitPoll;
+  $("prx").onclick=()=>{$("prm").hidden=true};$("prm").onclick=e=>{if(e.target.id==="prm")e.target.hidden=true};
+  $("prb").onclick=async ev=>{const a=ev.target.closest("[data-a]");if(a&&await pollAction(revId,a.dataset.a))$("prm").hidden=true};
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
 function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
@@ -491,10 +502,11 @@ function pollCard(p){
    return `<button class="popt ${myV.has(o.id)?"on":""} ${c&&c===max?"lead":""}" data-o="${o.id}"><span class="fill" style="width:${pc}%"></span><span class="in2"><span>${myV.has(o.id)?"✓ ":""}${esc(o.label)}</span><span class="cnt">${c} phiếu · ${pc}%</span></span></button>${c?`<div class="pvoters" title="${esc(names.join(", "))}">${esc(names.slice(0,4).join(", "))}${names.length>4?" +"+(names.length-4):""}</div>`:""}`}).join("")}
   ${p.created_by===user.id?`<div class="row"><button class="pa" data-a="close">${p.closed?"Mở lại":"Đóng bình chọn"}</button><button class="pa" data-a="del">Xóa</button></div>`:""}</div>`;}
 function votePane(){
+  const open=polls.filter(x=>!x.closed);
   const body=pollErr?`<div class="mut" style="padding:8px">⚠️ Chưa tải được bình chọn: ${esc(pollErr)}.<br>Hãy chạy file <b>setup_vote.sql</b> trong Supabase → SQL Editor để tạo bảng bình chọn.</div>`
-   :!polls.length?`<div class="mut" style="padding:8px">Chưa có bình chọn nào. Bấm “＋ Tạo bình chọn” ở cột trái để bắt đầu.</div>`
-   :`<div class="polls" id="pl">${polls.map(pollCard).join("")}</div>`;
-  return `<div class="ptop"><h2 style="margin:0;font-size:17px">🗳️ Bình chọn của nhóm</h2><span class="sp"></span><span class="mut">${polls.length} bình chọn</span></div>${body}`;}
+   :!open.length?`<div class="mut" style="padding:8px">Chưa có bình chọn nào đang mở. Bấm “＋ Tạo bình chọn” ở cột trái để bắt đầu.${polls.length?" Các bình chọn đã đóng nằm ở thẻ <b>Lịch sử vote</b> bên phải.":""}</div>`
+   :`<div class="polls" id="pl">${open.map(pollCard).join("")}</div>`;
+  return `<div class="ptop"><h2 style="margin:0;font-size:17px">🗳️ Bình chọn của nhóm</h2><span class="sp"></span><span class="mut">${open.length} đang mở</span></div>${body}`;}
 async function castVote(pid,oid){
   const p=polls.find(x=>x.id===pid);if(!p)return;if(p.closed)return say("Bình chọn này đã đóng.");
   const mv=(p.poll_votes||[]).filter(v=>v.user_id===user.id).map(v=>v.option_id);let r;
@@ -503,9 +515,31 @@ async function castVote(pid,oid){
     r=await SB.from("poll_votes").insert({poll_id:pid,option_id:oid,user_id:user.id});}
   if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(false);}
 async function pollAction(pid,a){
-  let r;if(a==="close"){const p=polls.find(x=>x.id===pid);r=await SB.from("polls").update({closed:!p.closed}).eq("id",pid);}
-  else{if(!confirm("Xóa bình chọn này?"))return;r=await SB.from("polls").delete().eq("id",pid);}
-  if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(false);}
+  let r,msg="";
+  if(a==="close"){const p=polls.find(x=>x.id===pid);r=await SB.from("polls").update({closed:!p.closed}).eq("id",pid);msg=p.closed?"✓ Đã mở lại bình chọn":"✓ Đã đóng. Bình chọn được lưu vào Lịch sử vote";}
+  else{if(!confirm("Xóa bình chọn này?"))return false;r=await SB.from("polls").delete().eq("id",pid);msg="✓ Đã xóa bình chọn";}
+  if(r.error){say("Lỗi: "+r.error.message);return false;}
+  await loadTeam(false);say(msg);return true;}
+let revId=null;
+function resultOf(p){const opts=p.poll_options||[],votes=p.poll_votes||[];if(!votes.length)return "Chưa có phiếu nào";
+  const c=o=>votes.filter(v=>v.option_id===o.id).length,max=Math.max(...opts.map(c)),top=opts.filter(o=>c(o)===max);
+  return (top.length>1?"Hòa: ":"🏆 ")+top.map(o=>o.label).join(", ")+" ("+max+" phiếu)";}
+function historyCard(){
+  const cl=polls.filter(x=>x.closed);
+  return `<aside class="card side notes"><h2>🕘 Lịch sử vote</h2><div class="nl" id="hl">${
+   pollErr?"<span class='mut'>Chưa tải được dữ liệu bình chọn.</span>"
+   :cl.length?cl.map(p=>{const vt=new Set((p.poll_votes||[]).map(v=>v.user_id)).size;
+     return `<div class="ni hi" data-h="${p.id}"><div class="nt"><b>${esc(p.title)}</b><div class="mut">${dmy(new Date(p.created_at))} · ${esc(p.created_by_name||"")} · ${vt} người vote</div><div class="res">${esc(resultOf(p))}</div></div><button class="pa" data-h="${p.id}">Xem lại</button></div>`}).join("")
+   :"<span class='mut'>Chưa có bình chọn nào được đóng. Khi đóng, bình chọn sẽ được lưu ở đây để xem lại.</span>"}</div></aside>`;}
+function reviewHtml(p){
+  const opts=[...(p.poll_options||[])].sort((a,b)=>a.position-b.position),votes=p.poll_votes||[],total=votes.length,voted=new Set(votes.map(v=>v.user_id));
+  const nm=id=>(members.find(m=>m.user_id===id)||{}).name||"(đã rời nhóm)",not=members.filter(m=>!voted.has(m.user_id)).map(m=>m.name);
+  return `<div class="pmeta" style="margin:8px 0 12px">${esc(p.created_by_name||"")} · ${dmy(new Date(p.created_at))} · ${p.multi?"chọn nhiều":"chọn một"} · ${voted.size}/${members.length} người đã vote · <span class="tag ${p.closed?"":"open"}">${p.closed?"Đã đóng":"Đang mở"}</span></div>
+   ${opts.map(o=>{const vs=votes.filter(v=>v.option_id===o.id),c=vs.length,pc=total?Math.round(c/total*100):0;
+     return `<div class="popt"><span class="fill" style="width:${pc}%"></span><span class="in2"><span>${esc(o.label)}</span><span class="cnt">${c} phiếu · ${pc}%</span></span></div><div class="pvoters">${c?"Đã chọn: "+vs.map(v=>esc(nm(v.user_id))).join(", "):"Chưa có ai chọn"}</div>`}).join("")}
+   ${not.length?`<div class="pmeta" style="margin-top:6px">Chưa vote: ${esc(not.join(", "))}</div>`:""}
+   ${p.created_by===user.id?`<div class="row" style="margin-top:14px"><button class="pa" data-a="close">${p.closed?"Mở lại bình chọn":"Đóng bình chọn"}</button><button class="pa" data-a="del">Xóa</button></div>`:""}`;}
+function openReview(id){const p=polls.find(x=>x.id===id);if(!p)return;revId=id;$("prh").textContent=p.title;$("prb").innerHTML=reviewHtml(p);$("prm").hidden=false;}
 function addOpt(v){const d=document.createElement("div");d.className="row";
   d.innerHTML='<input class="sp po" maxlength="80" placeholder="Phương án"><button class="rm" title="Xóa phương án">×</button>';
   d.querySelector("input").value=v||"";
@@ -532,10 +566,10 @@ function drawTeam(){
    <div class="seg"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button></div>
    <button id="vb" class="mem-btn ${tview==="vote"?"on":""}"><span>🗳️ Bình chọn</span><small>${openP} đang mở</small></button>
    ${tview==="mine"?`${noteSide()}<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`
-   :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu.</p><span class="sp"></span><button class="p" id="pc">＋ Tạo bình chọn</button>`
+   :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu. Khi đóng, bình chọn được chuyển sang Lịch sử vote.</p><span class="sp"></span><button class="p" id="pc">＋ Tạo bình chọn</button>`
    :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`}
    </aside>
-   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section><div class="rcol">${chatCard()}${tview==="mine"?noteCard():tview==="res"?freeCard():""}</div></div>`;
+   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section><div class="rcol">${chatCard()}${tview==="mine"?noteCard():tview==="res"?freeCard():historyCard()}</div></div>`;
   const w=document.querySelector(".wrap,.polls");if(w)w.scrollTop=st;
   if(tview!=="vote")bindNav();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
@@ -547,6 +581,7 @@ function drawTeam(){
   $("vb").onclick=async()=>{await flush();tview="vote";sel=new Set();drawTeam()};
   if(tview==="mine"){bindNotes();if(ntv!==null&&$("nt")&&fillNote===null)$("nt").value=ntv;$("sv").onclick=()=>saveTeam(false);$("ch").onclick=()=>me().done?unchot():saveTeam(true);}
   else if(tview==="vote"){$("pc").onclick=openPollForm;
+    const hl=$("hl");if(hl)hl.onclick=ev=>{const i=ev.target.closest("[data-h]");if(i)openReview(i.dataset.h)};
     const pl=$("pl");if(pl)pl.onclick=ev=>{const c=ev.target.closest(".pcard");if(!c)return;const a=ev.target.closest("[data-a]"),o=ev.target.closest("[data-o]");
       if(a)pollAction(c.dataset.p,a.dataset.a);else if(o)castVote(c.dataset.p,o.dataset.o);};}
   else showFree();
