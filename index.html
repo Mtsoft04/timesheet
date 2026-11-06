@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Timesheet</title>
+<script>try{var _t=localStorage.getItem("theme");if(_t)document.documentElement.dataset.theme=_t}catch(e){}</script>
 <meta name="theme-color" content="#2563eb">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
 <style>
 :root{--bg:#f3f7fd;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#dbe4f0;--ac:#2563eb;--acd:#1d4ed8;--acs:#eaf2ff;--free:#10b981;--head:#eef3fb;--sh:0 1px 2px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.06)}
-@media (prefers-color-scheme:dark){:root{--bg:#0a0f1a;--card:#0f1726;--tx:#e6e9f0;--mut:#8b95a7;--bd:#1f2a40;--ac:#5b9dff;--acd:#4a8af0;--acs:#16264a;--free:#22c08a;--head:#17223a;--sh:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a0f1a;--card:#0f1726;--tx:#e6e9f0;--mut:#8b95a7;--bd:#1f2a40;--ac:#5b9dff;--acd:#4a8af0;--acs:#16264a;--free:#22c08a;--head:#17223a;--sh:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{--bg:#0a0f1a;--card:#0f1726;--tx:#e6e9f0;--mut:#8b95a7;--bd:#1f2a40;--ac:#5b9dff;--acd:#4a8af0;--acs:#16264a;--free:#22c08a;--head:#17223a;--sh:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3)}
+:root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .top{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--bd)}
@@ -73,10 +76,75 @@ details summary{cursor:pointer;font-weight:600}details ul{margin:10px 0 0;paddin
 #msg{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:12px;box-shadow:var(--sh);font-size:14px;max-width:92vw;z-index:30}
 #msg:empty{display:none}
 @media (max-width:700px){.auth{grid-template-columns:1fr}.brand{padding:24px}.brand h2{font-size:21px}.card{padding:14px}}
+
+/* ===== Giao diện sau đăng nhập: toàn màn hình, nằm ngang ===== */
+body:has(.shell) main{max-width:none}
+body:has(.shell) .top .in{max-width:none}
+.shell{display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;align-items:center;gap:10px}
+.split{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px}
+.split>.card,.cards3>.card{margin:0}
+.side{display:flex;flex-direction:column;gap:12px;padding:16px;min-height:0;overflow:auto}
+.side h2{margin:0;font-size:18px}
+.side button{width:100%}
+.side .row button{width:auto}
+.side .seg{display:flex}.side .seg button{flex:1;width:auto}
+.pane{display:flex;flex-direction:column;min-height:0;padding:12px}
+.ptop{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;margin-bottom:10px}
+.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+.nav b{margin-left:6px;font-size:15px}
+.legend{margin:0}
+.wrap{position:relative;flex:1;height:72vh;min-height:420px;max-height:none}
+.wrap table{position:absolute;left:0;top:0;width:100%;height:100%;min-height:520px;min-width:640px;table-layout:fixed}
+td.c{max-width:none}
+th.t{width:56px}
+th,td{font-size:12px}
+.free-list{flex:1;min-height:0;overflow:auto}
+.free-list>div{padding:5px 0;border-bottom:1px dashed var(--bd)}
+.cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:grid;place-items:center;z-index:40;padding:16px}
+.modal[hidden]{display:none}
+.modal .card{max-width:580px;max-height:90vh;overflow:auto;margin:0}
+.modal ul{margin:10px 0 0;padding-left:20px}.modal li{margin:6px 0}
+@media (min-width:901px) and (min-height:560px){
+ body:has(.shell){height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+ body:has(.shell) main{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 16px}
+ #app:has(.shell){flex:1;min-height:0;display:flex;flex-direction:column}
+ .shell{flex:1;min-height:0}
+ #body{flex:1;min-height:0}
+ .split{height:100%}
+ .wrap{height:auto}
+}
+@media (max-width:900px){.split{grid-template-columns:1fr}.cards3{grid-template-columns:1fr}.side{overflow:visible}}
+
+/* ===== Ghi chú phong phú ===== */
+.n1{--nc:#0d9488}td.busy.n1,td.busy.n1:hover{background:var(--nc);color:#fff}
+.n2{--nc:#7c3aed}td.busy.n2,td.busy.n2:hover{background:var(--nc);color:#fff}
+.n3{--nc:#e11d48}td.busy.n3,td.busy.n3:hover{background:var(--nc);color:#fff}
+.n4{--nc:#d97706}td.busy.n4,td.busy.n4:hover{background:var(--nc);color:#fff}
+.n5{--nc:#db2777}td.busy.n5,td.busy.n5:hover{background:var(--nc);color:#fff}
+.n6{--nc:#15803d}td.busy.n6,td.busy.n6:hover{background:var(--nc);color:#fff}
+.n7{--nc:#4f46e5}td.busy.n7,td.busy.n7:hover{background:var(--nc);color:#fff}
+.n8{--nc:#ea580c}td.busy.n8,td.busy.n8:hover{background:var(--nc);color:#fff}
+td.busy{font-weight:600}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ac);flex:none;margin-top:6px}
+.dot[class*=" n"]{background:var(--nc)}
+.nl{flex:1;min-height:90px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.ni{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;background:var(--bg)}
+.ni:hover{border-color:var(--ac)}
+.ni .nt{flex:1;min-width:0;font-size:13px;line-height:1.35}.ni .nt div{overflow-wrap:anywhere}
+.side .nx{width:auto;padding:0 8px;border:0;background:transparent;color:var(--mut);font-size:18px;line-height:1.2}
+.nbox{display:flex;flex-direction:column;gap:8px}
+.qn{display:flex;gap:6px;flex-wrap:wrap}
+.side .qb{width:auto;padding:3px 10px;font-size:12px;border-radius:99px;font-weight:500}
+.side h3{margin:0;font-size:13px;color:var(--mut);font-weight:600}
+
+.thm{padding:3px;flex:none}.thm button{padding:5px 10px;font-size:13px;display:inline-flex;gap:5px;align-items:center}
+@media (max-width:600px){.thm button span{display:none}.thm button{padding:5px 9px}}
 </style>
 </head>
 <body>
-<header class="top"><div class="in"><div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M8 14h3"/></svg></div><b class="brandname">Timesheet</b><span class="sp"></span><span id="who"></span><button id="out" hidden>Đăng xuất</button></div></header>
+<header class="top"><div class="in"><div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M8 14h3"/></svg></div><b class="brandname">Timesheet</b><span class="sp"></span><span id="who"></span><button id="out" hidden>Đăng xuất</button><div class="seg thm" role="group" aria-label="Giao diện"><button id="thl" title="Giao diện sáng">☀️<span>Sáng</span></button><button id="thd" title="Giao diện tối">🌙<span>Tối</span></button></div></div></header>
 <main>
 <div id="app"></div>
 <div id="msg" role="status"></div>
@@ -92,6 +160,16 @@ const DAYS=["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"],H=
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const say=t=>{$("msg").textContent=t||"";clearTimeout(say.t);if(t)say.t=setTimeout(()=>{$("msg").textContent=""},6000)};
+
+/* ---------- giao diện sáng / tối ---------- */
+const rootEl=document.documentElement,mq=matchMedia("(prefers-color-scheme:dark)");
+const isDark=()=>rootEl.dataset.theme?rootEl.dataset.theme==="dark":mq.matches;
+function paintTheme(){const d=isDark();$("thl").className=d?"":"on";$("thd").className=d?"on":"";
+  $("thl").setAttribute("aria-pressed",!d);$("thd").setAttribute("aria-pressed",d);
+  const mt=document.querySelector("meta[name=theme-color]");if(mt)mt.content=d?"#0f1726":"#2563eb";}
+function setTheme(t){rootEl.dataset.theme=t;try{localStorage.setItem("theme",t)}catch(e){}paintTheme();}
+$("thl").onclick=()=>setTheme("light");$("thd").onclick=()=>setTheme("dark");
+mq.addEventListener&&mq.addEventListener("change",paintTheme);paintTheme();
 let SB,user=null,view="me",ctx=null,drag=null;
 let mine=new Map(),sel=new Set(),pmode="paint",pdirty=false;          // cá nhân
 let teams=[],team=null,members=[],busy=[],tmine=new Set(),tview="mine",dirty=false; // nhóm
@@ -121,7 +199,7 @@ function grid(fn){
   return s+"</table></div>";
 }
 function navBar(){const b=addD(weekStart,6);
-  return"<div class='row nav'><button id='pw' title='Tuần trước'>‹</button><button id='tdy'>Hôm nay</button><button id='nw' title='Tuần sau'>›</button><input type='date' id='dp' value='"+selDate+"'><button id='pm' class='pmbtn "+(paintTouch?"on":"")+"'>✏️ Kéo để tô: "+(paintTouch?"Bật":"Tắt")+"</button><b>Tuần "+dm(weekStart)+" – "+dm(b)+"/"+b.getFullYear()+"</b></div>";}
+  return"<div class='nav'><button id='pw' title='Tuần trước'>‹</button><button id='tdy'>Hôm nay</button><button id='nw' title='Tuần sau'>›</button><input type='date' id='dp' value='"+selDate+"'><button id='pm' class='pmbtn "+(paintTouch?"on":"")+"'>✏️ Kéo để tô: "+(paintTouch?"Bật":"Tắt")+"</button><b>Tuần "+dm(weekStart)+" – "+dm(b)+"/"+b.getFullYear()+"</b></div>";}
 function bindNav(){bindPM();
   const to=async(ws,sd)=>{await flush();weekStart=ws;selDate=sd||fmt(ws);view==="me"?meView():loadTeam(true);};
   $("pw").onclick=()=>to(addD(weekStart,-7));$("nw").onclick=()=>to(addD(weekStart,7));
@@ -130,7 +208,9 @@ function bindNav(){bindPM();
 }
 function bindPM(){const b=$("pm");if(!b)return;b.onclick=()=>{paintTouch=!paintTouch;document.body.classList.toggle("paintmode",paintTouch);b.className="pmbtn "+(paintTouch?"on":"");b.textContent="✏️ Kéo để tô: "+(paintTouch?"Bật":"Tắt");say(paintTouch?"Kéo ngón tay để tô nhiều ô. Tắt đi để cuộn lịch.":"Đã tắt. Chạm từng ô để tô, kéo để cuộn.");};}
 async function flush(){if(view==="me"&&pdirty)await saveMe(true);else if(view==="team"&&team&&dirty&&tview==="mine")await saveTeam(false,true);}
-function refreshCell(k){const td=document.querySelector("td[data-k='"+k+"']");if(!td||!ctx)return;const c=ctx.cell(k);td.className="c "+c.cls;td.textContent=c.txt||"";td.title=c.tip||"";}
+function refreshCell(k,nb){const td=document.querySelector("td[data-k='"+k+"']");
+  if(td&&ctx){const c=ctx.cell(k);td.className="c "+c.cls;td.textContent=c.txt||"";td.title=c.tip||"";}
+  if(!nb){const[d,h]=k.split("|");[+h-1,+h+1].forEach(x=>{if(x>=0&&x<24)refreshCell(K(d,x),true)});}}
 let paintTouch=false,handled=false;
 document.addEventListener("pointerdown",e=>{const td=e.target.closest&&e.target.closest("td.c");handled=false;
   if(!td||!ctx||!ctx.start)return;
@@ -165,17 +245,19 @@ function authView(){
 
 /* ---------- khung chính ---------- */
 function shell(){
-  $("app").innerHTML=`<div class="seg" style="margin-bottom:14px"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button></div>
-  <details class="card"><summary>📖 Hướng dẫn &amp; lưu ý</summary><ul>
+  $("app").innerHTML=`<div class="shell"><div class="tabs"><div class="seg"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button></div><span class="sp"></span><button id="hp">📖 Hướng dẫn</button></div><div id="body"></div></div>
+  <div class="modal" id="help" hidden><div class="card"><div class="row"><h2 style="margin:0">📖 Hướng dẫn &amp; lưu ý</h2><span class="sp"></span><button id="hx">Đóng</button></div><ul>
   <li><b>Ô xanh dương = giờ BẬN</b>, ô trống = giờ rảnh. Bấm hoặc kéo để tô.</li>
   <li>Lịch hiển thị theo <b>tuần</b>. Dùng nút ‹ ›, <b>Hôm nay</b> hoặc ô chọn ngày để chuyển tuần. Thay đổi chưa lưu sẽ tự lưu khi bạn chuyển tuần.</li>
   <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
   <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
-  <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></details>
-  <div id="body"></div>`;
+  <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>`;
   $("tm").onclick=()=>{view="me";go()};$("tt").onclick=()=>{view="team";go()};
+  $("hp").onclick=()=>{$("help").hidden=false};$("hx").onclick=()=>{$("help").hidden=true};
+  $("help").onclick=e=>{if(e.target.id==="help")e.target.hidden=true};
 }
+document.addEventListener("keydown",e=>{const h=$("help");if(e.key==="Escape"&&h)h.hidden=true});
 function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
@@ -186,24 +268,59 @@ async function meView(){
   if(error){say("Lỗi tải: "+error.message);return;}
   mine=new Map((data||[]).map(r=>[K(r.slot_date,r.hour),r.note||""]));sel=new Set();pdirty=false;drawMe();
 }
+const NC=8,hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return 1+h%NC};
+const QN=["Đi làm","Đi học","Họp","Việc riêng","Nghỉ ngơi"];
+let fillNote=null;
+function noteBlocks(){const out=[];
+  wkDates().forEach((dt,di)=>{const f=fmt(dt);let cur=null;
+    for(let h=0;h<24;h++){const k=K(f,h),n=mine.get(k);
+      if(n){if(cur&&cur.note===n&&cur.e===h-1){cur.e=h;cur.keys.push(k);}else{cur={d:di,dt,s:h,e:h,note:n,keys:[k]};out.push(cur);}}else cur=null;}});
+  return out;}
+function updSel(){const e=$("sc");if(e)e.textContent="Đã chọn "+sel.size+" ô";}
+function renderNotes(){const el=$("nl");if(!el)return;const bl=noteBlocks();
+  el.innerHTML=bl.length?bl.map((b,i)=>`<div class="ni" data-i="${i}"><i class="dot n${hue(b.note)}"></i><div class="nt"><b>${DAYS[b.d]} ${dm(b.dt)} · ${b.s}:00–${b.e+1}:00</b><div>${esc(b.note)}</div></div><button class="nx" data-x="1" title="Xóa ghi chú này">×</button></div>`).join(""):"<span class='mut'>Chưa có ghi chú nào trong tuần này.</span>";
+  el.onclick=ev=>{const it=ev.target.closest(".ni");if(!it)return;const b=bl[+it.dataset.i];
+    if(ev.target.closest("[data-x]")){b.keys.forEach(k=>mine.set(k,""));pdirty=true;sel=new Set([...sel].filter(k=>!b.keys.includes(k)));drawMe();return;}
+    pmode="note";sel=new Set(b.keys);fillNote=b.note;drawMe();};}
 function drawMe(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
-  $("body").innerHTML=`<div class="card">${navBar()}<div class="row" style="margin-bottom:8px">
-   <button id="m1" class="${pmode==="paint"?"on":""}">Tô giờ bận</button><button id="m2" class="${pmode==="note"?"on":""}">Ghi chú</button>
-   <span class="sp"></span><button class="p" id="sv">Lưu lịch cá nhân</button></div>
-   <div class="row" id="nb" style="margin-bottom:8px;${pmode==="note"?"":"display:none"}"><input id="nt" class="sp" placeholder="Nội dung cho các ô đang chọn (viền cam)"><button id="na">Gán ghi chú</button></div>
-   ${legend()}${grid(k=>ctx.cell(k))}</div>`;
+  $("body").innerHTML=`<div class="split"><aside class="card side"><h2>Lịch cá nhân</h2>
+   <div class="seg"><button id="m1" class="${pmode==="paint"?"on":""}">Tô giờ bận</button><button id="m2" class="${pmode==="note"?"on":""}">Ghi chú</button></div>
+   ${pmode==="note"?`<div class="nbox"><p class="mut" style="margin:0">Kéo chọn các giờ liền nhau (hoặc bấm từng ô), nhập nội dung rồi bấm Gán. Chọn nhóm giờ khác để gán ghi chú khác.</p>
+    <div class="qn">${QN.map(t=>`<button class="qb" data-q="${t}">${t}</button>`).join("")}</div>
+    <input id="nt" maxlength="80" placeholder="Nội dung ghi chú cho các ô đã chọn">
+    <div class="row"><button class="p sp" id="na">Gán ghi chú</button><button class="sp" id="nc">Xóa ghi chú</button></div>
+    <div class="mut" id="sc">Đã chọn 0 ô</div></div>`
+   :`<p class="mut" style="margin:0">Bấm hoặc kéo trên lịch để tô giờ bận. Chuyển sang “Ghi chú” để ghi chú riêng cho từng khung giờ.</p>`}
+   <h3>Ghi chú trong tuần</h3><div class="nl" id="nl"></div>
+   <button class="p" id="sv">Lưu lịch cá nhân</button></aside>
+   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section></div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
-  bindNav();
+  bindNav();renderNotes();updSel();
   $("m1").onclick=()=>{pmode="paint";sel=new Set();drawMe()};$("m2").onclick=()=>{pmode="note";drawMe()};
   $("sv").onclick=()=>saveMe(false);
-  $("na").onclick=()=>{const t=$("nt").value.trim();sel.forEach(k=>mine.set(k,t));sel.forEach(refreshCell);pdirty=true;say("Đã gán ghi chú. Nhớ bấm Lưu.")};
+  if(pmode==="note"){
+    document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{$("nt").value=b.dataset.q;$("nt").focus()});
+    if(fillNote!==null){$("nt").value=fillNote;fillNote=null;}
+    const assign=()=>{const t=$("nt").value.trim();if(!sel.size)return say("Hãy chọn ô trên lịch trước.");if(!t)return say("Hãy nhập nội dung ghi chú.");
+      const n=sel.size;sel.forEach(k=>mine.set(k,t));pdirty=true;sel=new Set();$("nt").value="";drawMe();say("Đã gán ghi chú cho "+n+" ô. Nhớ bấm Lưu.")};
+    $("na").onclick=assign;$("nt").onkeydown=e=>{if(e.key==="Enter")assign()};
+    $("nc").onclick=()=>{if(!sel.size)return say("Hãy chọn ô cần xóa ghi chú.");sel.forEach(k=>{if(mine.has(k))mine.set(k,"")});pdirty=true;sel=new Set();drawMe();say("Đã xóa ghi chú. Nhớ bấm Lưu.")};
+  }
 }
 ctx={cell:()=>({cls:""})};
 function setMeCtx(){
-  ctx={cell:k=>mine.has(k)?{cls:"busy"+(sel.has(k)?" sel":""),txt:mine.get(k),tip:mine.get(k)}:{cls:""},
+  ctx={cell:k=>{const sl=sel.has(k)?" sel":"";
+     if(!mine.has(k))return{cls:sl.trim()};
+     const n=mine.get(k),[d,h]=k.split("|"),first=!(+h>0&&n&&mine.get(K(d,+h-1))===n);
+     return{cls:"busy"+sl+(n?" n"+hue(n):""),txt:n&&first?n:"",tip:n};},
    start:k=>pmode==="paint"?!mine.has(k):!sel.has(k),
-   apply:(k,v)=>{if(pmode==="paint"){v?(mine.has(k)||mine.set(k,"")):mine.delete(k);pdirty=true;}else if(mine.has(k)){v?sel.add(k):sel.delete(k);}refreshCell(k);}};
+   apply:(k,v)=>{
+     if(pmode==="paint"){v?(mine.has(k)||mine.set(k,"")):mine.delete(k);pdirty=true;}
+     else{v?sel.add(k):sel.delete(k);
+       const nt=$("nt");if(v&&nt){const ns=new Set([...sel].map(x=>mine.get(x)||""));if(ns.size===1){const only=[...ns][0];if(only)nt.value=only;}}
+       updSel();}
+     refreshCell(k);if(pmode==="paint")renderNotes();}};
 }
 async function saveMe(silent){
   if(!silent)say("Đang lưu…");
@@ -223,9 +340,9 @@ async function teamView(){
   team?openTeam(team.id):listTeams();
 }
 function listTeams(){
-  $("body").innerHTML=`<div class="card"><h2>Nhóm của tôi</h2><div class="teams">${teams.length?teams.map(t=>`<button data-t="${t.id}">${esc(t.name)}</button>`).join(""):"<span class='mut'>Bạn chưa có nhóm nào.</span>"}</div></div>
+  $("body").innerHTML=`<div class="cards3"><div class="card"><h2>Nhóm của tôi</h2><div class="teams">${teams.length?teams.map(t=>`<button data-t="${t.id}">${esc(t.name)}</button>`).join(""):"<span class='mut'>Bạn chưa có nhóm nào.</span>"}</div></div>
   <div class="card"><h2>Tạo nhóm mới</h2><div class="row"><input id="tn" class="sp" placeholder="Tên nhóm" maxlength="60"><button class="p" id="tc">Tạo nhóm</button></div></div>
-  <div class="card"><h2>Tham gia bằng mã</h2><div class="row"><input id="jc" class="sp" placeholder="Nhập mã chia sẻ" maxlength="10"><button class="p" id="jb">Tham gia</button></div></div>`;
+  <div class="card"><h2>Tham gia bằng mã</h2><div class="row"><input id="jc" class="sp" placeholder="Nhập mã chia sẻ" maxlength="10"><button class="p" id="jb">Tham gia</button></div></div></div>`;
   document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>openTeam(b.dataset.t));
   $("tc").onclick=async()=>{const n=$("tn").value.trim();if(!n)return say("Hãy nhập tên nhóm.");
     const{data,error}=await SB.rpc("create_team",{p_name:n,p_user_name:uname()});if(error)return say("Lỗi: "+error.message);team=data;teamView();};
@@ -250,13 +367,14 @@ function busyOf(k){const[d,h]=k.split("|");const ids=new Set(busy.filter(x=>x.sl
 function drawTeam(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
   const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all;
-  $("body").innerHTML=`<div class="card"><div class="row"><button id="bk">← Nhóm</button><h2 style="margin:0">${esc(team.name)}</h2><span class="sp"></span>Mã chia sẻ: <span class="code">${esc(team.code)}</span><button id="cp">Sao chép</button></div>
-   <div style="margin-top:8px">${members.map(m=>`<span class="chip ${m.done?"ok":""}">${esc(m.name)} ${m.done?"✓ đã chốt":"… chưa chốt"}</span>`).join("")}</div></div>
-   <div class="card">${navBar()}<div class="row" style="margin-bottom:8px"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button><span class="sp"></span>
-   ${tview==="mine"?`<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`:""}</div>
-   ${tview==="res"?`<p class="mut" style="margin:0 0 8px">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`:""}
-   ${legend()}${grid(k=>ctx.cell(k))}
-   ${tview==="res"?`<div id="fr" style="margin-top:10px"></div>`:""}</div>`;
+  $("body").innerHTML=`<div class="split"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
+   <div class="row">Mã: <span class="code">${esc(team.code)}</span><span class="sp"></span><button id="cp">Sao chép</button></div>
+   <div>${members.map(m=>`<span class="chip ${m.done?"ok":""}">${esc(m.name)} ${m.done?"✓ đã chốt":"… chưa chốt"}</span>`).join("")}</div>
+   <div class="seg"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button></div>
+   ${tview==="mine"?`<span class="sp"></span><button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`
+   :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p><div id="fr" class="free-list"></div>`}
+   </aside>
+   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section></div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
   bindNav();
   $("bk").onclick=async()=>{await flush();team=null;listTeams()};
