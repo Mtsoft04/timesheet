@@ -152,6 +152,32 @@ td.busy{font-weight:600}
 .mrow .mn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow .chip{margin:0;flex:none}
 .av{width:30px;height:30px;border-radius:50%;background:var(--acs);color:var(--ac);display:grid;place-items:center;font-weight:700;flex:none}
+
+/* ===== Bình chọn ===== */
+.mem-btn.on{border-color:var(--ac);background:var(--acs);color:var(--ac)}
+.polls{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;align-content:start;padding:2px}
+.pcard{border:1px solid var(--bd);border-radius:14px;padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:8px}
+.pcard h3{margin:0;font-size:16px;overflow-wrap:anywhere}
+.pmeta{font-size:12px;color:var(--mut)}
+.tag{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--head);color:var(--mut);white-space:nowrap;font-weight:600}
+.tag.open{background:color-mix(in srgb,var(--free) 18%,transparent);color:var(--free)}
+.popt{position:relative;display:block;width:100%;text-align:left;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);overflow:hidden;cursor:pointer;font-weight:500}
+.popt .fill{position:absolute;left:0;top:0;bottom:0;background:var(--acs);transition:width .3s}
+.popt .in2{position:relative;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.popt .in2>span:first-child{overflow-wrap:anywhere}.popt .cnt{white-space:nowrap;color:var(--mut);font-size:12px}
+.popt.on{border-color:var(--ac)}.popt.on .fill{background:color-mix(in srgb,var(--ac) 28%,transparent)}
+.popt.lead .cnt{color:var(--tx);font-weight:700}
+.pcard.closed .popt{cursor:default}
+.pvoters{font-size:11px;color:var(--mut);margin:-3px 4px 2px}
+.pa{width:auto;padding:4px 10px;font-size:12px}
+#pcm .rm{width:auto;padding:4px 10px}
+#po{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+
+/* ===== 3 cột: thao tác | lịch | ghi chú ===== */
+.split3{grid-template-columns:290px minmax(0,1fr) 280px}
+.notes h2{font-size:16px}
+@media (max-width:1280px){.split3{grid-template-columns:250px minmax(0,1fr) 230px}}
+@media (max-width:900px){.split3{grid-template-columns:1fr}.notes .nl{max-height:260px}}
 </style>
 </head>
 <body>
@@ -263,15 +289,26 @@ function shell(){
   <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
   <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Trong lịch nhóm cũng có thể ghi chú từng khung giờ (Đi làm, Họp…). Mọi người thấy ghi chú khi rê chuột vào ô ở tab Kết quả chung. Bấm nút <b>Thành viên</b> để xem danh sách và ai đã chốt.</li>
+  <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>
-  <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>`;
+  <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
+  <div class="modal" id="pcm" hidden><div class="card"><div class="row"><h2 style="margin:0">🗳️ Tạo bình chọn</h2><span class="sp"></span><button id="pcx">Đóng</button></div>
+   <input id="pt" maxlength="120" placeholder="Tiêu đề, ví dụ: Họp nhóm vào 19h thứ Sáu?" style="width:100%;margin-top:12px">
+   <div id="po"></div>
+   <div class="row"><button id="pa1">＋ Thêm phương án</button><button id="pa2">Đồng ý / Không đồng ý</button></div>
+   <label class="row" style="margin-top:12px;gap:8px;cursor:pointer"><input type="checkbox" id="pmu"> Cho phép chọn nhiều phương án</label>
+   <div class="row" style="margin-top:14px;justify-content:flex-end"><button id="pcc">Hủy</button><button class="p" id="pgo">Tạo bình chọn</button></div></div></div>`;
   $("tm").onclick=()=>{view="me";go()};$("tt").onclick=()=>{view="team";go()};
   $("hp").onclick=()=>{$("help").hidden=false};$("hx").onclick=()=>{$("help").hidden=true};
   $("help").onclick=e=>{if(e.target.id==="help")e.target.hidden=true};
   $("mx").onclick=()=>{$("mem").hidden=true};$("mem").onclick=e=>{if(e.target.id==="mem")e.target.hidden=true};$("mq").oninput=renderMembers;
+  $("pcx").onclick=$("pcc").onclick=()=>{$("pcm").hidden=true};$("pcm").onclick=e=>{if(e.target.id==="pcm")e.target.hidden=true};
+  $("pa1").onclick=()=>{if(document.querySelectorAll("#po .row").length>=10)return say("Tối đa 10 phương án.");addOpt("").querySelector("input").focus()};
+  $("pa2").onclick=()=>{$("po").innerHTML="";addOpt("Đồng ý");addOpt("Không đồng ý");if(!$("pt").value.trim())$("pt").focus()};
+  $("pgo").onclick=submitPoll;
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
 function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
@@ -310,7 +347,8 @@ function noteSide(){
     <div class="row"><button class="p sp" id="na">Gán ghi chú</button><button class="sp" id="nc">Xóa ghi chú</button></div>
     <div class="mut" id="sc">Đã chọn 0 ô</div></div>`
    :`<p class="mut" style="margin:0">Bấm hoặc kéo trên lịch để tô giờ bận. Chuyển sang “Ghi chú” để ghi chú riêng cho từng khung giờ.${view==="team"?" Mọi người trong nhóm thấy ghi chú khi rê chuột vào ô.":""}</p>`}`:"")
-  +`<h3>Ghi chú trong tuần</h3><div class="nl" id="nl"></div>`;}
+  ;}
+function noteCard(){return `<aside class="card side notes"><h2>📝 Ghi chú trong tuần</h2><div class="nl" id="nl"></div></aside>`;}
 function bindNotes(){
   renderNotes();updSel();if(!canEdit())return;
   $("m1").onclick=()=>{pmode="paint";sel=new Set();redraw()};$("m2").onclick=()=>{pmode="note";redraw()};
@@ -324,9 +362,9 @@ function bindNotes(){
 }
 function drawMe(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
-  $("body").innerHTML=`<div class="split"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}
+  $("body").innerHTML=`<div class="split split3"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}
    <button class="p" id="sv">Lưu lịch cá nhân</button></aside>
-   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section></div>`;
+   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section>${noteCard()}</div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
   bindNav();bindNotes();
   $("sv").onclick=()=>saveMe(false);
@@ -375,12 +413,16 @@ function listTeams(){
 async function openTeam(id){
   team=teams.find(t=>t.id===id)||team;dirty=false;tview="mine";pmode="paint";sel=new Set();await loadTeam(true);
 }
+let polls=[],pollErr=null;
+async function loadPolls(){polls=[];pollErr=null;if(!team)return;
+  const r=await SB.from("polls").select("*,poll_options(id,label,position),poll_votes(option_id,user_id)").eq("team_id",team.id).order("created_at",{ascending:false});
+  if(r.error)pollErr=r.error.message;else polls=r.data||[];}
 async function loadTeam(reset){
   if(!team)return;
   const[a,b]=wkRange();
   const[m,z]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id).gte("slot_date",a).lte("slot_date",b)]);
   if(m.error||z.error)return say("Lỗi tải: "+(m.error||z.error).message);
-  members=m.data||[];busy=z.data||[];
+  members=m.data||[];busy=z.data||[];await loadPolls();
   if(reset){dirty=false;sel=new Set();}
   if(reset||!dirty)tmine=new Map(busy.filter(x=>x.user_id===user.id).map(x=>[K(x.slot_date,x.hour),x.note||""]));
   if(reset||view==="team")drawTeam();
@@ -393,27 +435,75 @@ function renderMembers(){const el=$("ml");if(!el||!team)return;const q=($("mq").
   el.innerHTML=list.length?list.map(m=>`<div class="mrow"><span class="av">${esc((m.name||"?").trim().charAt(0).toUpperCase())}</span><span class="mn">${esc(m.name)}${m.user_id===user.id?" <small class='mut'>(Bạn)</small>":""}</span><span class="chip ${m.done?"ok":""}">${m.done?"✓ Đã chốt":"… Chưa chốt"}</span></div>`).join(""):"<div class='mut' style='padding:12px'>Không tìm thấy thành viên.</div>";}
 function openMembers(){$("mq").value="";renderMembers();$("mem").hidden=false;}
 function busyOf(k){const[d,h]=k.split("|");const ids=new Set(busy.filter(x=>x.slot_date===d&&x.hour==h&&x.user_id!==user.id).map(x=>x.user_id));if(tmine.has(k))ids.add(user.id);return[...ids];}
+function pollCard(p){
+  const opts=[...(p.poll_options||[])].sort((a,b)=>a.position-b.position),votes=p.poll_votes||[],total=votes.length,voters=new Set(votes.map(v=>v.user_id)).size;
+  const myV=new Set(votes.filter(v=>v.user_id===user.id).map(v=>v.option_id)),cnt=o=>votes.filter(v=>v.option_id===o.id).length,max=Math.max(0,...opts.map(cnt));
+  const nm=id=>(members.find(m=>m.user_id===id)||{}).name||"?";
+  return `<div class="pcard ${p.closed?"closed":""}" data-p="${p.id}"><div class="row"><h3 class="sp">${esc(p.title)}</h3><span class="tag ${p.closed?"":"open"}">${p.closed?"Đã đóng":"Đang mở"}</span></div>
+  <div class="pmeta">${esc(p.created_by_name||"")} · ${p.multi?"chọn nhiều":"chọn một"} · ${voters}/${members.length} người đã vote</div>
+  ${opts.map(o=>{const vs=votes.filter(v=>v.option_id===o.id),c=vs.length,pc=total?Math.round(c/total*100):0,names=vs.map(v=>nm(v.user_id));
+   return `<button class="popt ${myV.has(o.id)?"on":""} ${c&&c===max?"lead":""}" data-o="${o.id}"><span class="fill" style="width:${pc}%"></span><span class="in2"><span>${myV.has(o.id)?"✓ ":""}${esc(o.label)}</span><span class="cnt">${c} phiếu · ${pc}%</span></span></button>${c?`<div class="pvoters" title="${esc(names.join(", "))}">${esc(names.slice(0,4).join(", "))}${names.length>4?" +"+(names.length-4):""}</div>`:""}`}).join("")}
+  ${p.created_by===user.id?`<div class="row"><button class="pa" data-a="close">${p.closed?"Mở lại":"Đóng bình chọn"}</button><button class="pa" data-a="del">Xóa</button></div>`:""}</div>`;}
+function votePane(){
+  const body=pollErr?`<div class="mut" style="padding:8px">⚠️ Chưa tải được bình chọn: ${esc(pollErr)}.<br>Hãy chạy file <b>setup_vote.sql</b> trong Supabase → SQL Editor để tạo bảng bình chọn.</div>`
+   :!polls.length?`<div class="mut" style="padding:8px">Chưa có bình chọn nào. Bấm “＋ Tạo bình chọn” ở cột trái để bắt đầu.</div>`
+   :`<div class="polls" id="pl">${polls.map(pollCard).join("")}</div>`;
+  return `<div class="ptop"><h2 style="margin:0;font-size:17px">🗳️ Bình chọn của nhóm</h2><span class="sp"></span><span class="mut">${polls.length} bình chọn</span></div>${body}`;}
+async function castVote(pid,oid){
+  const p=polls.find(x=>x.id===pid);if(!p)return;if(p.closed)return say("Bình chọn này đã đóng.");
+  const mv=(p.poll_votes||[]).filter(v=>v.user_id===user.id).map(v=>v.option_id);let r;
+  if(mv.includes(oid))r=await SB.from("poll_votes").delete().eq("option_id",oid).eq("user_id",user.id);
+  else{if(!p.multi&&mv.length){r=await SB.from("poll_votes").delete().eq("poll_id",pid).eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);}
+    r=await SB.from("poll_votes").insert({poll_id:pid,option_id:oid,user_id:user.id});}
+  if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(false);}
+async function pollAction(pid,a){
+  let r;if(a==="close"){const p=polls.find(x=>x.id===pid);r=await SB.from("polls").update({closed:!p.closed}).eq("id",pid);}
+  else{if(!confirm("Xóa bình chọn này?"))return;r=await SB.from("polls").delete().eq("id",pid);}
+  if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(false);}
+function addOpt(v){const d=document.createElement("div");d.className="row";
+  d.innerHTML='<input class="sp po" maxlength="80" placeholder="Phương án"><button class="rm" title="Xóa phương án">×</button>';
+  d.querySelector("input").value=v||"";
+  d.querySelector(".rm").onclick=()=>{if(document.querySelectorAll("#po .row").length>2)d.remove();else say("Cần ít nhất 2 phương án.")};
+  $("po").appendChild(d);return d;}
+function openPollForm(){$("pt").value="";$("po").innerHTML="";addOpt("");addOpt("");$("pmu").checked=false;$("pcm").hidden=false;$("pt").focus();}
+async function submitPoll(){
+  const title=$("pt").value.trim(),opts=[...new Set([...document.querySelectorAll("#po .po")].map(i=>i.value.trim()).filter(Boolean))];
+  if(!title)return say("Hãy nhập tiêu đề bình chọn.");if(opts.length<2)return say("Cần ít nhất 2 phương án khác nhau.");
+  $("pgo").disabled=true;
+  const r=await SB.from("polls").insert({team_id:team.id,title,multi:$("pmu").checked,created_by:user.id,created_by_name:uname()}).select().single();
+  if(r.error){$("pgo").disabled=false;return say("Lỗi: "+r.error.message);}
+  const r2=await SB.from("poll_options").insert(opts.map((label,i)=>({poll_id:r.data.id,label,position:i})));
+  $("pgo").disabled=false;
+  if(r2.error){await SB.from("polls").delete().eq("id",r.data.id);return say("Lỗi: "+r2.error.message);}
+  $("pcm").hidden=true;say("✓ Đã tạo bình chọn");await loadTeam(false);}
 function drawTeam(){
-  const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0,ntv=$("nt")?$("nt").value:null;
-  const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all,pct=all?Math.round(done/all*100):0;
-  $("body").innerHTML=`<div class="split"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
+  const w0=document.querySelector(".wrap,.polls"),st=w0?w0.scrollTop:0,ntv=$("nt")?$("nt").value:null;
+  const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all,pct=all?Math.round(done/all*100):0,openP=polls.filter(x=>!x.closed).length;
+  $("body").innerHTML=`<div class="split ${tview==="mine"?"split3":""}"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
    <div class="row">Mã: <span class="code">${esc(team.code)}</span><span class="sp"></span><button id="cp">Sao chép</button></div>
    <button id="mb" class="mem-btn"><span>👥 Thành viên (${all})</span><small>${done}/${all} đã chốt</small></button><div class="bar"><i style="width:${pct}%"></i></div>
    <div class="seg"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button></div>
+   <button id="vb" class="mem-btn ${tview==="vote"?"on":""}"><span>🗳️ Bình chọn</span><small>${openP} đang mở</small></button>
    ${tview==="mine"?`${noteSide()}<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`
+   :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu.</p><span class="sp"></span><button class="p" id="pc">＋ Tạo bình chọn</button>`
    :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p><div id="fr" class="free-list"></div>`}
    </aside>
-   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section></div>`;
-  const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
-  bindNav();
+   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section>${tview==="mine"?noteCard():""}</div>`;
+  const w=document.querySelector(".wrap,.polls");if(w)w.scrollTop=st;
+  if(tview!=="vote")bindNav();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
   $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(team.code);say("Đã sao chép mã "+team.code)};
   $("mb").onclick=openMembers;if($("mem")&&!$("mem").hidden)renderMembers();
   $("v1").onclick=async()=>{await flush();tview="mine";sel=new Set();drawTeam()};$("v2").onclick=async()=>{await flush();tview="res";sel=new Set();drawTeam()};
+  $("vb").onclick=async()=>{await flush();tview="vote";sel=new Set();drawTeam()};
   if(tview==="mine"){bindNotes();if(ntv!==null&&$("nt")&&fillNote===null)$("nt").value=ntv;$("sv").onclick=()=>saveTeam(false);$("ch").onclick=()=>me().done?unchot():saveTeam(true);}
+  else if(tview==="vote"){$("pc").onclick=openPollForm;
+    const pl=$("pl");if(pl)pl.onclick=ev=>{const c=ev.target.closest(".pcard");if(!c)return;const a=ev.target.closest("[data-a]"),o=ev.target.closest("[data-o]");
+      if(a)pollAction(c.dataset.p,a.dataset.a);else if(o)castVote(c.dataset.p,o.dataset.o);};}
   else showFree();
 }
 function setTeamCtx(){
+  if(tview==="vote"){ctx={cell:()=>({cls:""})};return;}
   if(tview==="mine"){ctx=team&&!me().done?mkCtx():{cell:cellOf};return;}
   ctx={cell:k=>{
     const b=busyOf(k);if(!b.length)return{cls:"free",txt:"✓"};
