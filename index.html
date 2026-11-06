@@ -276,14 +276,35 @@ textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac
 .lbn,.lbx{position:fixed;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:42px;height:42px;padding:0;font-size:22px;line-height:1}
 .lbn:hover,.lbx:hover{background:rgba(255,255,255,.28)}
 #lbp{left:14px;top:50%}#lbn{right:14px;top:50%}.lbx{right:14px;top:14px}
+
+/* ===== Chuông thông báo ===== */
+.bell{position:relative;padding:6px 10px;font-size:17px;line-height:1}
+.bell i{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ef4444;color:#fff;font:700 11px/18px inherit;font-style:normal;text-align:center}
+.npn{position:fixed;top:56px;right:12px;width:min(400px,calc(100vw - 24px));max-height:min(75vh,640px);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);z-index:35;overflow:hidden}
+.npn[hidden]{display:none}
+.nph{display:flex;align-items:center;gap:6px;padding:12px 14px 8px;flex-wrap:wrap}
+.nfs{margin:0 14px 8px;display:flex}.nfs button{flex:1;padding:6px 8px;font-size:13px}
+.npl{overflow:auto;border-top:1px solid var(--bd);min-height:80px}
+.nit{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer}
+.nit:hover{background:var(--head)}.nit:last-child{border-bottom:0}
+.nit.un{background:var(--acs)}.nit.un:hover{background:color-mix(in srgb,var(--ac) 18%,var(--card))}
+.nic{font-size:20px;line-height:1.3;flex:none}
+.nbody{flex:1;min-width:0}
+.nbd{font-size:13.5px;line-height:1.4;overflow-wrap:anywhere}.nit.un .nbd{font-weight:600}
+.nex{font-size:12.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nmt{font-size:11px;color:var(--mut);margin-top:2px}
+.ndot{width:9px;height:9px;border-radius:50%;background:var(--ac);flex:none;margin-top:7px}
+.flash{animation:fl 1.8s ease-out}
+@keyframes fl{0%,40%{box-shadow:0 0 0 3px var(--ac)}100%{box-shadow:var(--sh)}}
 </style>
 </head>
 <body>
-<header class="top"><div class="in"><div class="mh" role="img" aria-label="Logo Mạnh Hưng"></div><b class="brandname">Timesheet</b><span class="sp"></span><span id="who"></span><button id="out" hidden>Đăng xuất</button><div class="seg thm" role="group" aria-label="Giao diện"><button id="thl" title="Giao diện sáng">☀️<span>Sáng</span></button><button id="thd" title="Giao diện tối">🌙<span>Tối</span></button></div></div></header>
+<header class="top"><div class="in"><div class="mh" role="img" aria-label="Logo Mạnh Hưng"></div><b class="brandname">Timesheet</b><span class="sp"></span><button id="bell" class="bell" title="Thông báo" aria-label="Thông báo" hidden>🔔<i id="bdg" hidden></i></button><span id="who"></span><button id="out" hidden>Đăng xuất</button><div class="seg thm" role="group" aria-label="Giao diện"><button id="thl" title="Giao diện sáng">☀️<span>Sáng</span></button><button id="thd" title="Giao diện tối">🌙<span>Tối</span></button></div></div></header>
 <main>
 <div id="app"></div>
 <div id="msg" role="status"></div>
 </main>
+<div id="npn" class="npn" hidden></div>
 <footer class="foot"><div class="in"><div class="mh" role="img" aria-label="Logo Mạnh Hưng"></div><div class="ft"><b>Công ty TNHH Phần mềm Mạnh Hưng</b><span>Timesheet – công cụ xếp lịch và tìm giờ rảnh chung cho nhóm</span></div></div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -418,7 +439,7 @@ function shell(){
   $("prx").onclick=()=>{$("prm").hidden=true};$("prm").onclick=e=>{if(e.target.id==="prm")e.target.hidden=true};
   $("prb").onclick=async ev=>{const a=ev.target.closest("[data-a]");if(a&&await pollAction(revId,a.dataset.a))$("prm").hidden=true};
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm","apm","lb"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm","apm","lb","npn"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
 function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";$("tp").className=view==="posts"?"on":"";say("");view==="me"?meView():view==="posts"?postsView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
@@ -581,7 +602,7 @@ function listTeams(){
     const{data,error}=await SB.rpc("join_team",{p_code:c,p_user_name:uname()});if(error)return say("Lỗi: "+error.message);team=data;teamView();};
 }
 async function openTeam(id){
-  team=teams.find(t=>t.id===id)||team;dirty=false;tview="mine";pmode="paint";sel=new Set();await loadTeam(true);
+  team=teams.find(t=>t.id===id)||team;dirty=false;tview=pendTview||"mine";pendTview=null;pmode="paint";sel=new Set();await loadTeam(true);
 }
 let polls=[],pollErr=null,chatMsgs=[],chatTeam=null,chatErr=null;
 const VD=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"],p2=n=>String(n).padStart(2,"0");
@@ -779,7 +800,8 @@ const leaveTeam=()=>leaveOrDelete("leave_team","Rời nhóm \""+team.name+"\"?\n
 
 /* ---------- trang bài viết ---------- */
 const EM=["👍","❤️","😂","😮","😢","😡"],PAGE=10,MAXIMG=4;
-const feed={posts:[],rx:[],cm:[],limit:PAGE,more:false,err:null,loaded:false,busy:false,openC:new Set(),reply:null};
+const feed={posts:[],rx:[],cm:[],limit:PAGE,more:false,err:null,loaded:false,busy:false,openC:new Set(),reply:null,focus:null,ft:0};
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:r&3|8).toString(16)});
 let pend=[],lb={l:[],i:0};
 const imgUrl=p=>SB.storage.from("post-images").getPublicUrl(p).data.publicUrl;
 const ini=n=>esc((n||"?").trim().charAt(0).toUpperCase());
@@ -848,6 +870,7 @@ async function loadFeed(){
       if(ids.length){const[a,b]=await Promise.all([SB.from("post_reactions").select("*").in("post_id",ids),SB.from("post_comments").select("*").in("post_id",ids).order("created_at",{ascending:true})]);
         if(a.error||b.error)feed.err=(a.error||b.error).message;else{feed.rx=a.data||[];feed.cm=b.data||[];}}}
   }finally{feed.busy=false;feed.loaded=true;}
+  if(feed.focus&&feed.more&&!feed.err&&!feed.posts.some(p=>p.id===feed.focus)&&feed.ft<5){feed.ft++;feed.limit+=PAGE;return loadFeed();}
   if(view==="posts")renderFeed();
 }
 function cmtHtml(c,p,isRep){
@@ -875,6 +898,9 @@ function renderFeed(){
    :feed.posts.map(postHtml).join("")+(feed.more?`<button data-a="more">Xem thêm bài viết</button>`:"");
   for(const k in dr){const i=el.querySelector('[data-draft="'+k+'"]');if(i&&dr[k])i.value=dr[k];}
   if(af){const i=el.querySelector('[data-draft="'+af+'"]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
+  if(feed.focus&&feed.loaded){const a=el.querySelector('[data-p="'+feed.focus+'"]');
+    if(a){a.scrollIntoView({block:"center"});a.classList.add("flash");feed.focus=null;}
+    else if(!feed.more){feed.focus=null;say("Bài viết này không còn tồn tại.");}}
 }
 function feedClick(ev){
   const im=ev.target.closest("img.pim");
@@ -886,7 +912,7 @@ function feedClick(ev){
   else if(a==="tgl"){feed.openC.has(pid)?feed.openC.delete(pid):feed.openC.add(pid);renderFeed();}
   else if(a==="del")deletePost(pid);
   else if(a==="rep"){const cm=feed.cm.find(x=>x.id===b.dataset.c);if(!cm)return;
-    feed.reply={pid,root:cm.parent_id||cm.id,to:cm.user_name,pre:cm.parent_id?"@"+cm.user_name+" ":""};renderFeed();
+    feed.reply={pid,root:cm.parent_id||cm.id,to:cm.user_name,uid:cm.user_id,pre:cm.parent_id?"@"+cm.user_name+" ":""};renderFeed();
     const i=document.querySelector('#plist [data-draft="r:'+feed.reply.root+'"]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
   else if(a==="cancel"){feed.reply=null;renderFeed();}
   else if(a==="send")sendComment(pid,b.dataset.r||null);
@@ -903,9 +929,12 @@ async function sendComment(pid,root){
   if(!pid)return;
   const key=root?"r:"+root:"c:"+pid,inp=document.querySelector('#plist [data-draft="'+key+'"]'),t=inp&&inp.value.trim();if(!t)return;
   inp.disabled=true;
-  const r=await SB.from("post_comments").insert({post_id:pid,parent_id:root||null,user_name:uname(),content:t}).select().single();
+  const row={id:uuid(),post_id:pid,parent_id:root||null,user_id:user.id,user_name:uname(),content:t};
+  if(root&&feed.reply&&feed.reply.uid)row.reply_to=feed.reply.uid;
+  let r=await SB.from("post_comments").insert(row);
+  if(r.error&&/reply_to/i.test(r.error.message)){delete row.reply_to;r=await SB.from("post_comments").insert(row);}
   if(r.error){inp.disabled=false;return say("Lỗi: "+r.error.message);}
-  feed.cm.push(r.data);inp.value="";if(root)feed.reply=null;feed.openC.add(pid);renderFeed();
+  feed.cm.push({...row,created_at:new Date().toISOString()});inp.value="";if(root)feed.reply=null;feed.openC.add(pid);renderFeed();
   if(!root){const n=document.querySelector('#plist [data-draft="c:'+pid+'"]');if(n)n.focus();}
 }
 async function deleteComment(cid){
@@ -921,6 +950,78 @@ async function deletePost(pid){
 }
 setInterval(()=>{if(!user||view!=="posts"||feed.busy)return;
   if([...document.querySelectorAll("#plist [data-draft]")].some(i=>i.value.trim()))return;loadFeed();},20000);
+
+/* ---------- chuông thông báo ---------- */
+let notifs=[],nf="all",nSeen=null,nCh=null,nUser=null,nErr=null,pendTview=null;
+const NIC={post_new:"📰",reaction:"😀",comment:"💬",reply:"↩️",join:"👋",leave:"🚪",poll_new:"🗳️",poll_closed:"🔒",chat:"💬",team_deleted:"🗑️"};
+async function loadNotifs(){
+  if(!user)return;
+  const r=await SB.from("notifications").select("*").order("created_at",{ascending:false}).limit(60);
+  if(r.error){nErr=r.error.message;notifs=[];renderBell();return;}
+  nErr=null;const list=r.data||[];
+  // đang mở đúng nhóm thì tin nhắn chat coi như đã đọc
+  const auto=list.filter(n=>!n.read&&n.type==="chat"&&view==="team"&&team&&team.id===n.team_id&&document.visibilityState==="visible").map(n=>n.id);
+  if(auto.length){list.forEach(n=>{if(auto.includes(n.id))n.read=true});SB.from("notifications").update({read:true}).in("id",auto).then(()=>{});}
+  if(nSeen&&$("npn").hidden){const fresh=list.filter(n=>!n.read&&nSeen.get(n.id)!==n.created_at);
+    if(fresh.length)say("🔔 "+fresh[0].body+(fresh.length>1?" (+"+(fresh.length-1)+" thông báo khác)":""));}
+  nSeen=new Map(list.map(n=>[n.id,n.created_at]));
+  notifs=list;renderBell();
+}
+function renderBell(){
+  const b=$("bdg"),un=notifs.filter(n=>!n.read).length;
+  if(b){b.hidden=!un;b.textContent=un>9?"9+":un;}
+  document.title=(un?"("+(un>9?"9+":un)+") ":"")+"Timesheet";
+  renderPanel();
+}
+function renderPanel(){
+  const el=$("npn");if(!el||el.hidden)return;
+  const un=c=>notifs.filter(n=>!n.read&&(c==="all"||n.cat===c)).length,tab=(k,t)=>`<button data-nf="${k}" class="${nf===k?"on":""}">${t}${un(k)?" ("+un(k)+")":""}</button>`;
+  const list=notifs.filter(n=>nf==="all"||n.cat===nf);
+  el.innerHTML=`<div class="nph"><b>🔔 Thông báo</b><span class="sp"></span><button class="pa" data-na="read" ${un("all")?"":"disabled"}>Đã đọc tất cả</button><button class="pa" data-na="clear" ${notifs.length?"":"disabled"}>Xoá tất cả</button></div>
+   <div class="seg nfs">${tab("all","Tất cả")}${tab("team","Nhóm")}${tab("post","Bài viết")}</div>
+   <div class="npl">${nErr?`<div class="mut" style="padding:14px">⚠️ Chưa dùng được thông báo: ${esc(nErr)}.<br>Hãy chạy đoạn SQL thông báo trong Supabase → SQL Editor.</div>`
+   :list.length?list.map(n=>`<div class="nit ${n.read?"":"un"}" data-n="${n.id}"><span class="nic">${NIC[n.type]||"🔔"}</span><div class="nbody"><div class="nbd">${esc(n.body)}${n.cnt>1?" ("+n.cnt+" tin)":""}</div>${n.extra?`<div class="nex">${esc(n.extra)}</div>`:""}<div class="nmt" title="${dt(n.created_at)}">${ago(n.created_at)} · ${n.cat==="team"?"Nhóm":"Bài viết"}</div></div>${n.read?"":`<i class="ndot"></i>`}</div>`).join("")
+   :`<div class="mut" style="padding:18px;text-align:center">Chưa có thông báo nào.</div>`}</div>`;
+}
+async function markRead(ids){
+  ids=ids.filter(id=>{const n=notifs.find(x=>x.id===id);return n&&!n.read});if(!ids.length)return;
+  notifs.forEach(n=>{if(ids.includes(n.id))n.read=true});renderBell();
+  const r=await SB.from("notifications").update({read:true}).in("id",ids);if(r.error)say("Lỗi: "+r.error.message);
+}
+async function markAll(){
+  notifs.forEach(n=>{n.read=true});renderBell();
+  const r=await SB.from("notifications").update({read:true}).eq("user_id",user.id).eq("read",false);if(r.error)say("Lỗi: "+r.error.message);
+}
+async function clearAll(){
+  if(!confirm("Xoá tất cả thông báo?"))return;
+  const r=await SB.from("notifications").delete().eq("user_id",user.id);if(r.error)return say("Lỗi: "+r.error.message);
+  notifs=[];renderBell();
+}
+async function openNotif(n){
+  if(!n)return;markRead([n.id]);$("npn").hidden=true;
+  await flush();
+  if(n.cat==="post"){
+    feed.focus=n.post_id||null;feed.ft=0;if(n.post_id&&(n.type==="comment"||n.type==="reply"))feed.openC.add(n.post_id);
+    view="posts";go();
+  }else{
+    pendTview=n.type==="poll_new"||n.type==="poll_closed"?"vote":null;
+    team=n.team_id?{id:n.team_id}:null;view="team";go();
+  }
+}
+function initNotifs(){
+  if(nCh&&nUser===user.id){loadNotifs();return;}
+  stopNotifs();nUser=user.id;nSeen=null;loadNotifs();
+  try{nCh=SB.channel("notif-"+user.id).on("postgres_changes",{event:"*",schema:"public",table:"notifications",filter:"user_id=eq."+user.id},()=>loadNotifs()).subscribe();}catch(e){}
+}
+function stopNotifs(){if(nCh&&SB){try{SB.removeChannel(nCh)}catch(e){}}nCh=null;nUser=null;nSeen=null;notifs=[];nErr=null;renderBell();}
+$("bell").onclick=()=>{const p=$("npn");p.hidden=!p.hidden;if(!p.hidden){renderPanel();loadNotifs();}};
+$("npn").onclick=e=>{
+  const f=e.target.closest("[data-nf]");if(f){nf=f.dataset.nf;renderPanel();return;}
+  const a=e.target.closest("[data-na]");if(a){a.dataset.na==="read"?markAll():clearAll();return;}
+  const it=e.target.closest("[data-n]");if(it)openNotif(notifs.find(x=>x.id===it.dataset.n));
+};
+document.addEventListener("click",e=>{const p=$("npn");if(p&&!p.hidden&&!e.target.closest("#npn,#bell"))p.hidden=true;});
+setInterval(()=>{if(user&&document.visibilityState==="visible")loadNotifs();},20000);
 
 /* ---------- vẽ lại theo ngữ cảnh ---------- */
 const _meView=meView,_drawMe=drawMe,_drawTeam=drawTeam;
@@ -938,9 +1039,9 @@ function start(){
     SB.auth.onAuthStateChange((ev,session)=>{
       try{
         user=session?session.user:null;
-        $("out").hidden=!user;$("who").innerHTML=user?"<i class='av'>"+esc(uname().charAt(0).toUpperCase())+"</i>"+esc(uname()):"";
-        if(!user){team=null;authView();return;}
-        if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();}
+        $("out").hidden=!user;$("bell").hidden=!user;$("who").innerHTML=user?"<i class='av'>"+esc(uname().charAt(0).toUpperCase())+"</i>"+esc(uname()):"";
+        if(!user){team=null;stopNotifs();authView();return;}
+        if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();initNotifs();}
       }catch(e){showErr(e)}
     });
     setInterval(()=>{const a=document.activeElement;if(user&&view==="team"&&team&&drag===null&&!dirty&&!(a&&["ci","nt"].includes(a.id)&&a.value))loadTeam(false);},15000);
