@@ -203,6 +203,17 @@ td.busy{font-weight:600}
 .hi .res{margin-top:2px}
 #prm .popt{cursor:default}
 #prm .pvoters{font-size:12px;white-space:normal;margin:-2px 4px 6px}
+
+/* ===== Áp dụng lịch cá nhân vào nhóm ===== */
+#apb h3{margin:16px 0 6px;font-size:13px;color:var(--mut);font-weight:600}
+.aprow{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--bd);cursor:pointer;border-radius:8px}
+.aprow:hover{background:var(--head)}
+.aprow input{padding:0;width:17px;height:17px;flex:none;accent-color:var(--ac)}
+.aprow .apn{flex:1;min-width:0;overflow-wrap:anywhere}
+.aprow small{color:var(--mut);font-size:12px}
+.aprow.opt{align-items:flex-start;border-bottom:0}
+.aprow.opt input{margin-top:3px}
+.aplist{max-height:30vh;overflow:auto;border:1px solid var(--bd);border-radius:12px;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -311,7 +322,7 @@ function shell(){
   <div class="modal" id="help" hidden><div class="card"><div class="row"><h2 style="margin:0">📖 Hướng dẫn &amp; lưu ý</h2><span class="sp"></span><button id="hx">Đóng</button></div><ul>
   <li><b>Ô xanh dương = giờ BẬN</b>, ô trống = giờ rảnh. Bấm hoặc kéo để tô.</li>
   <li>Lịch hiển thị theo <b>tuần</b>. Dùng nút ‹ ›, <b>Hôm nay</b> hoặc ô chọn ngày để chuyển tuần. Thay đổi chưa lưu sẽ tự lưu khi bạn chuyển tuần.</li>
-  <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu.</li>
+  <li><b>Lịch cá nhân</b>: tô giờ bận, chuyển sang chế độ "Ghi chú", chọn ô rồi nhập nội dung, bấm Lưu. Soạn xong có thể bấm <b>⤴ Áp dụng lịch cá nhân vào nhóm</b> để chép lịch (kèm ghi chú) sang một hoặc nhiều nhóm, không cần tô lại.</li>
   <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Trong lịch nhóm cũng có thể ghi chú từng khung giờ (Đi làm, Họp…). Mọi người thấy ghi chú khi rê chuột vào ô ở tab Kết quả chung. Bấm nút <b>Thành viên</b> để xem danh sách và ai đã chốt.</li>
   <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn. Bình chọn đã đóng chuyển sang thẻ <b>Lịch sử vote</b> (cột phải, dưới chat) với nút <b>Xem lại</b> để xem ai đã vote gì.</li>
@@ -320,6 +331,7 @@ function shell(){
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
   <div class="modal" id="prm" hidden><div class="card"><div class="row"><h2 style="margin:0" id="prh"></h2><span class="sp"></span><button id="prx">Đóng</button></div><div id="prb"></div></div></div>
+  <div class="modal" id="apm" hidden><div class="card"><div class="row"><h2 style="margin:0">⤴ Áp dụng lịch cá nhân vào nhóm</h2><span class="sp"></span><button id="apx">Đóng</button></div><div id="apb"></div></div></div>
   <div class="modal" id="pcm" hidden><div class="card"><div class="row"><h2 style="margin:0">🗳️ Tạo bình chọn</h2><span class="sp"></span><button id="pcx">Đóng</button></div>
    <input id="pt" maxlength="120" placeholder="Tiêu đề, ví dụ: Họp nhóm vào 19h thứ Sáu?" style="width:100%;margin-top:12px">
    <div id="po"></div>
@@ -334,10 +346,11 @@ function shell(){
   $("pa1").onclick=()=>{if(document.querySelectorAll("#po .row").length>=10)return say("Tối đa 10 phương án.");addOpt("").querySelector("input").focus()};
   $("pa2").onclick=()=>{$("po").innerHTML="";addOpt("Đồng ý");addOpt("Không đồng ý");if(!$("pt").value.trim())$("pt").focus()};
   $("pgo").onclick=submitPoll;
+  $("apx").onclick=()=>{$("apm").hidden=true};$("apm").onclick=e=>{if(e.target.id==="apm")e.target.hidden=true};
   $("prx").onclick=()=>{$("prm").hidden=true};$("prm").onclick=e=>{if(e.target.id==="prm")e.target.hidden=true};
   $("prb").onclick=async ev=>{const a=ev.target.closest("[data-a]");if(a&&await pollAction(revId,a.dataset.a))$("prm").hidden=true};
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm","apm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
 function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
@@ -392,11 +405,12 @@ function bindNotes(){
 function drawMe(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
   $("body").innerHTML=`<div class="split split3"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}
-   <button class="p" id="sv">Lưu lịch cá nhân</button></aside>
+   <button class="p" id="sv">Lưu lịch cá nhân</button>
+   <button id="ap" title="Sao chép lịch cá nhân sang nhóm bạn chọn">⤴ Áp dụng lịch cá nhân vào nhóm</button></aside>
    <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section>${noteCard()}</div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
   bindNav();bindNotes();
-  $("sv").onclick=()=>saveMe(false);
+  $("sv").onclick=()=>saveMe(false);$("ap").onclick=openApply;
 }
 ctx={cell:()=>({cls:""})};
 function cellOf(k){const m=store(),sl=sel.has(k)?" sel":"";
@@ -419,6 +433,65 @@ async function saveMe(silent){
   const rows=[...mine].map(([k,note])=>{const[d,h]=k.split("|");return{user_id:user.id,slot_date:d,hour:+h,note}});
   if(rows.length){r=await SB.from("personal_slots").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
   pdirty=false;say(silent?"Đã tự lưu tuần vừa chỉnh":"✓ Đã lưu lịch cá nhân");
+}
+
+/* ---------- áp dụng lịch cá nhân vào nhóm ---------- */
+async function openApply(){
+  $("apm").hidden=false;$("apb").innerHTML="<p class='mut'>Đang tải danh sách nhóm…</p>";
+  if(pdirty)await saveMe(true);                       // lưu phần vừa chỉnh để áp dụng bản mới nhất
+  const[t,m]=await Promise.all([SB.from("teams").select("*").order("created_at"),SB.from("team_members").select("team_id,done").eq("user_id",user.id)]);
+  if(t.error){$("apb").innerHTML="<p class='mut'>⚠️ Lỗi tải nhóm: "+esc(t.error.message)+"</p>";return;}
+  const tl=t.data||[],dn=new Set((m.data||[]).filter(x=>x.done).map(x=>x.team_id));
+  if(!tl.length){$("apb").innerHTML="<p class='mut'>Bạn chưa có nhóm nào. Hãy tạo nhóm hoặc tham gia bằng mã ở tab <b>Lịch đội nhóm</b> rồi quay lại đây.</p>";return;}
+  const a=weekStart,b=addD(weekStart,6);
+  $("apb").innerHTML=`<p class="mut" style="margin:8px 0 0">Sao chép giờ bận và ghi chú từ lịch cá nhân sang các nhóm bạn chọn, không cần soạn lại. Bạn vẫn xếp lịch riêng trong từng nhóm như bình thường.</p>
+   <h3>Chọn nhóm</h3>
+   <div class="aplist"><label class="aprow"><input type="checkbox" id="apall"><span class="apn"><b>Chọn tất cả</b></span></label>${tl.map(x=>`<label class="aprow"><input type="checkbox" class="apt" value="${x.id}" data-n="${esc(x.name)}"><span class="apn">${esc(x.name)}</span>${dn.has(x.id)?"<small>✓ đã chốt</small>":""}</label>`).join("")}</div>
+   <h3>Phạm vi</h3>
+   <label class="aprow opt"><input type="radio" name="apS" value="week" checked><span class="apn">Tuần đang xem <small>(${dm(a)} – ${dm(b)}/${b.getFullYear()})</small></span></label>
+   <label class="aprow opt"><input type="radio" name="apS" value="all"><span class="apn">Tất cả các tuần đã soạn trong lịch cá nhân</span></label>
+   <h3>Cách áp dụng</h3>
+   <label class="aprow opt"><input type="radio" name="apM" value="merge" checked><span class="apn">Gộp thêm <small>(giữ nguyên các ô đã có trong nhóm, chỉ thêm ô còn thiếu)</small></span></label>
+   <label class="aprow opt"><input type="radio" name="apM" value="replace"><span class="apn">Thay thế <small>(xóa lịch bận hiện có của tôi trong phạm vi đã chọn rồi dùng lịch cá nhân)</small></span></label>
+   <p class="mut" style="margin:10px 0 0;font-size:12px">Nhóm nào bạn đã “chốt” vẫn giữ trạng thái chốt sau khi áp dụng.</p>
+   <div class="row" style="margin-top:14px;justify-content:flex-end"><button id="apc">Hủy</button><button class="p" id="apg">Áp dụng</button></div>`;
+  const cbs=[...document.querySelectorAll(".apt")];
+  $("apall").onchange=e=>cbs.forEach(c=>c.checked=e.target.checked);
+  cbs.forEach(c=>c.onchange=()=>{$("apall").checked=cbs.every(x=>x.checked)});
+  $("apc").onclick=()=>{$("apm").hidden=true};$("apg").onclick=doApply;
+}
+async function doApply(){
+  const sel2=[...document.querySelectorAll(".apt:checked")].map(x=>({id:x.value,name:x.dataset.n}));
+  if(!sel2.length)return say("Hãy chọn ít nhất một nhóm.");
+  const scope=document.querySelector("input[name=apS]:checked").value,mode=document.querySelector("input[name=apM]:checked").value;
+  if(mode==="replace"&&scope==="all"&&!confirm("Thay thế TẤT CẢ các tuần: lịch bận hiện có của bạn ở "+sel2.length+" nhóm đã chọn sẽ bị xóa và thay bằng lịch cá nhân. Tiếp tục?"))return;
+  const g=$("apg");g.disabled=true;g.textContent="Đang áp dụng…";
+  const[a,b]=wkRange(),inScope=q=>scope==="week"?q.gte("slot_date",a).lte("slot_date",b):q;
+  const page=async mk=>{let out=[],from=0;for(;;){const r=await mk().range(from,from+999);if(r.error)throw r.error;const d=r.data||[];out=out.concat(d);if(d.length<1000)return out;from+=1000;}};
+  try{
+    const src=await page(()=>inScope(SB.from("personal_slots").select("slot_date,hour,note").eq("user_id",user.id).order("slot_date").order("hour")));
+    if(!src.length){say(scope==="week"?"Tuần này chưa có giờ bận nào trong lịch cá nhân.":"Lịch cá nhân đang trống.");return;}
+    let ok=0,added=0,noNote=false;const fail=[];
+    for(const t of sel2){
+      try{
+        let ex=new Set();
+        if(mode==="replace"){const r=await inScope(SB.from("team_busy").delete().eq("team_id",t.id).eq("user_id",user.id));if(r.error)throw r.error;}
+        else{const cur=await page(()=>inScope(SB.from("team_busy").select("slot_date,hour").eq("team_id",t.id).eq("user_id",user.id).order("slot_date").order("hour")));ex=new Set(cur.map(x=>K(x.slot_date,x.hour)));}
+        const rows=src.filter(x=>!ex.has(K(x.slot_date,x.hour))).map(x=>({team_id:t.id,user_id:user.id,slot_date:x.slot_date,hour:x.hour,note:x.note||""}));
+        for(let i=0;i<rows.length;i+=500){
+          const chunk=rows.slice(i,i+500);let r=await SB.from("team_busy").insert(chunk);
+          if(r.error&&/note/i.test(r.error.message)){noNote=true;r=await SB.from("team_busy").insert(chunk.map(({note,...x})=>x));}
+          if(r.error)throw r.error;
+        }
+        added+=rows.length;ok++;
+      }catch(e){fail.push(t.name+" ("+(e.message||e)+")");}
+    }
+    if(team&&sel2.some(t=>t.id===team.id))dirty=false;
+    $("apm").hidden=!fail.length;
+    say((ok?"✓ Đã áp dụng lịch cá nhân vào "+ok+" nhóm"+(mode==="merge"?" (thêm "+added+" ô mới)":""):"Không áp dụng được")+(noNote?" · chưa lưu được ghi chú: cần thêm cột note vào bảng team_busy":"")+(fail.length?" · Lỗi: "+fail.join("; "):""));
+    if(fail.length){g.disabled=false;g.textContent="Áp dụng";}
+  }catch(e){say("Lỗi: "+(e.message||e));}
+  finally{if(!$("apm").hidden){g.disabled=false;g.textContent="Áp dụng";}}
 }
 
 /* ---------- lịch đội nhóm ---------- */
@@ -445,6 +518,7 @@ async function openTeam(id){
 let polls=[],pollErr=null,chatMsgs=[],chatTeam=null,chatErr=null;
 const VD=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"],p2=n=>String(n).padStart(2,"0");
 const hm=d=>p2(d.getHours())+":"+p2(d.getMinutes()),dmy=d=>p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear();
+const dt=s=>{if(!s)return"";const d=new Date(s);return hm(d)+" "+dmy(d)};
 function dayLabel(d){const t=new Date(),y=new Date();y.setDate(t.getDate()-1);
   return dmy(d)===dmy(t)?"Hôm nay":dmy(d)===dmy(y)?"Hôm qua":VD[d.getDay()]+", "+dmy(d);}
 async function loadChat(){chatErr=null;
@@ -529,12 +603,12 @@ function historyCard(){
   return `<aside class="card side notes"><h2>🕘 Lịch sử vote</h2><div class="nl" id="hl">${
    pollErr?"<span class='mut'>Chưa tải được dữ liệu bình chọn.</span>"
    :cl.length?cl.map(p=>{const vt=new Set((p.poll_votes||[]).map(v=>v.user_id)).size;
-     return `<div class="ni hi" data-h="${p.id}"><div class="nt"><b>${esc(p.title)}</b><div class="mut">${dmy(new Date(p.created_at))} · ${esc(p.created_by_name||"")} · ${vt} người vote</div><div class="res">${esc(resultOf(p))}</div></div><button class="pa" data-h="${p.id}">Xem lại</button></div>`}).join("")
+     return `<div class="ni hi" data-h="${p.id}"><div class="nt"><b>${esc(p.title)}</b><div class="mut">${esc(p.created_by_name||"")} · ${vt} người vote</div><div class="mut">Tạo: ${dt(p.created_at)}</div><div class="mut">Đóng: ${p.closed_at?dt(p.closed_at):"không rõ"}</div><div class="res">${esc(resultOf(p))}</div></div><button class="pa" data-h="${p.id}">Xem lại</button></div>`}).join("")
    :"<span class='mut'>Chưa có bình chọn nào được đóng. Khi đóng, bình chọn sẽ được lưu ở đây để xem lại.</span>"}</div></aside>`;}
 function reviewHtml(p){
   const opts=[...(p.poll_options||[])].sort((a,b)=>a.position-b.position),votes=p.poll_votes||[],total=votes.length,voted=new Set(votes.map(v=>v.user_id));
   const nm=id=>(members.find(m=>m.user_id===id)||{}).name||"(đã rời nhóm)",not=members.filter(m=>!voted.has(m.user_id)).map(m=>m.name);
-  return `<div class="pmeta" style="margin:8px 0 12px">${esc(p.created_by_name||"")} · ${dmy(new Date(p.created_at))} · ${p.multi?"chọn nhiều":"chọn một"} · ${voted.size}/${members.length} người đã vote · <span class="tag ${p.closed?"":"open"}">${p.closed?"Đã đóng":"Đang mở"}</span></div>
+  return `<div class="pmeta" style="margin:8px 0 12px">${esc(p.created_by_name||"")} · Tạo ${dt(p.created_at)}${p.closed?" · Đóng "+(p.closed_at?dt(p.closed_at):"không rõ"):""} · ${p.multi?"chọn nhiều":"chọn một"} · ${voted.size}/${members.length} người đã vote · <span class="tag ${p.closed?"":"open"}">${p.closed?"Đã đóng":"Đang mở"}</span></div>
    ${opts.map(o=>{const vs=votes.filter(v=>v.option_id===o.id),c=vs.length,pc=total?Math.round(c/total*100):0;
      return `<div class="popt"><span class="fill" style="width:${pc}%"></span><span class="in2"><span>${esc(o.label)}</span><span class="cnt">${c} phiếu · ${pc}%</span></span></div><div class="pvoters">${c?"Đã chọn: "+vs.map(v=>esc(nm(v.user_id))).join(", "):"Chưa có ai chọn"}</div>`}).join("")}
    ${not.length?`<div class="pmeta" style="margin-top:6px">Chưa vote: ${esc(not.join(", "))}</div>`:""}
