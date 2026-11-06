@@ -178,6 +178,23 @@ td.busy{font-weight:600}
 .notes h2{font-size:16px}
 @media (max-width:1280px){.split3{grid-template-columns:250px minmax(0,1fr) 230px}}
 @media (max-width:900px){.split3{grid-template-columns:1fr}.notes .nl{max-height:260px}}
+
+/* ===== Cột phải: Chat + Ghi chú / Khung giờ rảnh ===== */
+.split3{grid-template-columns:290px minmax(0,1fr) 320px}
+@media (max-width:1280px){.split3{grid-template-columns:250px minmax(0,1fr) 270px}}
+@media (max-width:900px){.split3{grid-template-columns:1fr}}
+.rcol{display:flex;flex-direction:column;gap:14px;min-height:0}
+.rcol>.card{flex:1 1 0;min-height:0;margin:0}
+@media (max-width:900px){.rcol>.card{flex:none;height:360px}}
+.chat,.notes{overflow:hidden}
+.cl{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
+.cday{align-self:center;font-size:11px;color:var(--mut);background:var(--head);padding:2px 10px;border-radius:99px;margin:4px 0}
+.cm{display:flex;flex-direction:column;max-width:88%;align-self:flex-start}
+.cm.me{align-self:flex-end;align-items:flex-end}
+.cm .ch{font-size:11px;color:var(--mut);margin:0 6px 2px}.cm .ch b{color:var(--tx);font-weight:600}
+.cm .cb{background:var(--head);padding:7px 11px;border-radius:14px 14px 14px 4px;overflow-wrap:anywhere;white-space:pre-wrap;font-size:13.5px;line-height:1.4}
+.cm.me .cb{background:var(--ac);color:#fff;border-radius:14px 14px 4px 14px}
+.side .cin{flex-wrap:nowrap}.side .cin button{width:auto}
 </style>
 </head>
 <body>
@@ -290,6 +307,7 @@ function shell(){
   <li><b>Lịch nhóm</b>: tạo nhóm để nhận mã chia sẻ, gửi mã cho mọi người để họ nhập vào tham gia. Mỗi người tô giờ bận của mình (có thể tô nhiều tuần) rồi bấm <b>Chốt lịch</b>.</li>
   <li>Trong lịch nhóm cũng có thể ghi chú từng khung giờ (Đi làm, Họp…). Mọi người thấy ghi chú khi rê chuột vào ô ở tab Kết quả chung. Bấm nút <b>Thành viên</b> để xem danh sách và ai đã chốt.</li>
   <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn.</li>
+  <li><b>💬 Chat nhóm</b> nằm ở cột phải phía trên: mọi người trong nhóm cùng nhắn tin, mỗi tin hiện rõ tên người gửi và giờ gửi. Bấm Enter để gửi.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
@@ -413,7 +431,35 @@ function listTeams(){
 async function openTeam(id){
   team=teams.find(t=>t.id===id)||team;dirty=false;tview="mine";pmode="paint";sel=new Set();await loadTeam(true);
 }
-let polls=[],pollErr=null;
+let polls=[],pollErr=null,chatMsgs=[],chatTeam=null,chatErr=null;
+const VD=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"],p2=n=>String(n).padStart(2,"0");
+const hm=d=>p2(d.getHours())+":"+p2(d.getMinutes()),dmy=d=>p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear();
+function dayLabel(d){const t=new Date(),y=new Date();y.setDate(t.getDate()-1);
+  return dmy(d)===dmy(t)?"Hôm nay":dmy(d)===dmy(y)?"Hôm qua":VD[d.getDay()]+", "+dmy(d);}
+async function loadChat(){chatErr=null;
+  const r=await SB.from("team_messages").select("*").eq("team_id",team.id).order("created_at",{ascending:false}).limit(200);
+  if(r.error){chatErr=r.error.message;chatMsgs=[];return;}chatMsgs=(r.data||[]).reverse();}
+async function pollChat(){if(!team||chatTeam!==team.id||chatErr)return;
+  const last=chatMsgs.length?chatMsgs[chatMsgs.length-1].created_at:null;
+  let q=SB.from("team_messages").select("*").eq("team_id",team.id).order("created_at",{ascending:true}).limit(200);if(last)q=q.gte("created_at",last);
+  const r=await q;if(r.error||!r.data)return;
+  const seen=new Set(chatMsgs.map(m=>m.id)),add=r.data.filter(m=>!seen.has(m.id));if(!add.length)return;
+  chatMsgs=chatMsgs.concat(add).slice(-300);renderChat();}
+function renderChat(stick,top){const el=$("cl");if(!el)return;
+  const near=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+  if(chatErr){el.innerHTML=`<div class="mut" style="padding:6px">⚠️ Chưa dùng được chat: ${esc(chatErr)}.<br>Hãy chạy file <b>setup_chat.sql</b> trong Supabase → SQL Editor.</div>`;return;}
+  let day="",h="";
+  chatMsgs.forEach(m=>{const d=new Date(m.created_at),dl=dayLabel(d),mine=m.user_id===user.id;
+    if(dl!==day){day=dl;h+=`<div class="cday">${esc(dl)}</div>`;}
+    h+=`<div class="cm ${mine?"me":""}"><div class="ch"><b>${mine?"Bạn":esc(m.user_name)}</b> · <span title="${dmy(d)} ${hm(d)}:${p2(d.getSeconds())}">${hm(d)}</span></div><div class="cb">${esc(m.content)}</div></div>`;});
+  el.innerHTML=h||"<div class='mut' style='text-align:center;padding:12px'>Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên 👋</div>";
+  if(stick===true||(stick===undefined&&near))el.scrollTop=el.scrollHeight;else if(top!=null)el.scrollTop=top;}
+async function sendChat(){const i=$("ci"),t=i.value.trim();if(!t||chatErr)return;i.value="";
+  const r=await SB.from("team_messages").insert({team_id:team.id,user_id:user.id,user_name:uname(),content:t}).select().single();
+  if(r.error){i.value=t;return say("Lỗi gửi tin: "+r.error.message);}
+  if(!chatMsgs.find(m=>m.id===r.data.id))chatMsgs.push(r.data);renderChat(true);i.focus();}
+const chatCard=()=>`<aside class="card side chat"><h2>💬 Chat nhóm</h2><div class="cl" id="cl"></div><div class="row cin"><input id="ci" class="sp" maxlength="500" placeholder="Nhập tin nhắn…" autocomplete="off"${chatErr?" disabled":""}><button class="p" id="cs">Gửi</button></div></aside>`;
+const freeCard=()=>`<aside class="card side notes"><h2>🟢 Khung giờ rảnh chung</h2><div class="mut" style="font-size:12px;margin-top:-6px">Mọi người đều rảnh trong tuần đang xem</div><div id="fr" class="free-list"></div></aside>`;
 async function loadPolls(){polls=[];pollErr=null;if(!team)return;
   const r=await SB.from("polls").select("*,poll_options(id,label,position),poll_votes(option_id,user_id)").eq("team_id",team.id).order("created_at",{ascending:false});
   if(r.error)pollErr=r.error.message;else polls=r.data||[];}
@@ -422,7 +468,7 @@ async function loadTeam(reset){
   const[a,b]=wkRange();
   const[m,z]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id).gte("slot_date",a).lte("slot_date",b)]);
   if(m.error||z.error)return say("Lỗi tải: "+(m.error||z.error).message);
-  members=m.data||[];busy=z.data||[];await loadPolls();
+  members=m.data||[];busy=z.data||[];await loadPolls();if(chatTeam!==team.id){chatTeam=team.id;chatMsgs=[];await loadChat();}
   if(reset){dirty=false;sel=new Set();}
   if(reset||!dirty)tmine=new Map(busy.filter(x=>x.user_id===user.id).map(x=>[K(x.slot_date,x.hour),x.note||""]));
   if(reset||view==="team")drawTeam();
@@ -478,21 +524,24 @@ async function submitPoll(){
   $("pcm").hidden=true;say("✓ Đã tạo bình chọn");await loadTeam(false);}
 function drawTeam(){
   const w0=document.querySelector(".wrap,.polls"),st=w0?w0.scrollTop:0,ntv=$("nt")?$("nt").value:null;
+  const cl0=$("cl"),cNear=!cl0||cl0.scrollHeight-cl0.scrollTop-cl0.clientHeight<60,cTop=cl0?cl0.scrollTop:0,civ=$("ci")?$("ci").value:"",cif=!!document.activeElement&&document.activeElement.id==="ci";
   const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all,pct=all?Math.round(done/all*100):0,openP=polls.filter(x=>!x.closed).length;
-  $("body").innerHTML=`<div class="split ${tview==="mine"?"split3":""}"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
+  $("body").innerHTML=`<div class="split split3"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
    <div class="row">Mã: <span class="code">${esc(team.code)}</span><span class="sp"></span><button id="cp">Sao chép</button></div>
    <button id="mb" class="mem-btn"><span>👥 Thành viên (${all})</span><small>${done}/${all} đã chốt</small></button><div class="bar"><i style="width:${pct}%"></i></div>
    <div class="seg"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button></div>
    <button id="vb" class="mem-btn ${tview==="vote"?"on":""}"><span>🗳️ Bình chọn</span><small>${openP} đang mở</small></button>
    ${tview==="mine"?`${noteSide()}<button id="sv">Lưu</button><button class="p" id="ch">${me().done?"Bỏ chốt để sửa":"Chốt lịch của tôi"}</button>`
    :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu.</p><span class="sp"></span><button class="p" id="pc">＋ Tạo bình chọn</button>`
-   :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p><div id="fr" class="free-list"></div>`}
+   :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`}
    </aside>
-   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section>${tview==="mine"?noteCard():""}</div>`;
+   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section><div class="rcol">${chatCard()}${tview==="mine"?noteCard():tview==="res"?freeCard():""}</div></div>`;
   const w=document.querySelector(".wrap,.polls");if(w)w.scrollTop=st;
   if(tview!=="vote")bindNav();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
   $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(team.code);say("Đã sao chép mã "+team.code)};
+  renderChat(cNear,cTop);$("ci").value=civ;if(cif)$("ci").focus();
+  $("ci").onkeydown=e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();sendChat()}};$("cs").onclick=sendChat;
   $("mb").onclick=openMembers;if($("mem")&&!$("mem").hidden)renderMembers();
   $("v1").onclick=async()=>{await flush();tview="mine";sel=new Set();drawTeam()};$("v2").onclick=async()=>{await flush();tview="res";sel=new Set();drawTeam()};
   $("vb").onclick=async()=>{await flush();tview="vote";sel=new Set();drawTeam()};
@@ -514,7 +563,7 @@ function showFree(){
   wkDates().forEach((dt,d)=>{const f=fmt(dt);let r=[],s=null;
     for(let h=0;h<=24;h++){const free=h<24&&!busyOf(K(f,h)).length;if(free&&s===null)s=h;if(!free&&s!==null){r.push(s+":00–"+h+":00");s=null;}}
     if(r.length)out+="<div><b>"+DAYS[d]+" "+dm(dt)+":</b> "+r.join(", ")+"</div>";});
-  $("fr").innerHTML="<b>Khung giờ mọi người đều rảnh trong tuần này:</b>"+(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
+  $("fr").innerHTML=(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
 }
 async function saveTeam(chot,silent){
   if(!silent)say("Đang lưu…");
@@ -555,7 +604,8 @@ function start(){
         if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();}
       }catch(e){showErr(e)}
     });
-    setInterval(()=>{if(user&&view==="team"&&team&&drag===null&&!dirty)loadTeam(false);},15000);
+    setInterval(()=>{const a=document.activeElement;if(user&&view==="team"&&team&&drag===null&&!dirty&&!(a&&["ci","nt"].includes(a.id)&&a.value))loadTeam(false);},15000);
+    setInterval(()=>{if(user&&view==="team"&&team)pollChat();},3000);
   }catch(e){showErr(e)}
 }
 function showErr(e){$("app").innerHTML="<div class='card'><b>Lỗi khởi động:</b> "+esc(e&&e.message||e)+"</div>";}
