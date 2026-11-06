@@ -46,8 +46,8 @@ details summary{cursor:pointer;font-weight:600}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 // >>> DÁN CẤU HÌNH SUPABASE CỦA BẠN (Project Settings → API) <<<
-const SUPABASE_URL="sb_publishable_bLd1cdU4FoDY3DgJ_NhauA_SFTojuAR";
-const SUPABASE_KEY="sb_secret_qjKGcgLQGTW0L2RMQ1v5ew_BD7C50Ae";
+const SUPABASE_URL="https://bvsjikandybvzuzkxwpx.supabase.co";
+const SUPABASE_KEY="sb_publishable_bLd1cdU4FoDY3DgJ_NhauA_SFTojuAR";
 
 const DAYS=["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"],H=[...Array(24).keys()];
 const $=id=>document.getElementById(id);
@@ -216,18 +216,28 @@ drawTeam=function(){setTeamCtx();_drawTeam();};
 
 /* ---------- khởi động ---------- */
 function start(){
-  if(SUPABASE_URL==="DAN_PROJECT_URL"){$("app").innerHTML="<div class='card'>Chưa cấu hình Supabase. Mở file index.html và dán Project URL + anon key.</div>";return;}
-  SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  $("out").onclick=()=>SB.auth.signOut();
-  SB.auth.onAuthStateChange((ev,session)=>{
-    user=session?session.user:null;
-    $("out").hidden=!user;$("who").textContent=user?uname():"";
-    if(!user){team=null;authView();return;}
-    if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();}
-  });
-  setInterval(()=>{if(user&&view==="team"&&team&&drag===null&&!dirty)loadTeam(false);},15000);
+  try{
+    if(SUPABASE_URL==="DAN_PROJECT_URL"||SUPABASE_KEY==="DAN_ANON_PUBLIC_KEY"){$("app").innerHTML="<div class='card'>Chưa cấu hình Supabase. Mở file index.html và dán Project URL + anon key.</div>";return;}
+    if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL.trim())){$("app").innerHTML="<div class='card'>Project URL chưa đúng. Phải có dạng https://xxxxxxxx.supabase.co (không thêm /rest/v1 hay dấu cách).</div>";return;}
+    SB=supabase.createClient(SUPABASE_URL.trim(),SUPABASE_KEY.trim());
+    $("out").onclick=()=>SB.auth.signOut();
+    SB.auth.onAuthStateChange((ev,session)=>{
+      try{
+        user=session?session.user:null;
+        $("out").hidden=!user;$("who").textContent=user?uname():"";
+        if(!user){team=null;authView();return;}
+        if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();}
+      }catch(e){showErr(e)}
+    });
+    setInterval(()=>{if(user&&view==="team"&&team&&drag===null&&!dirty)loadTeam(false);},15000);
+  }catch(e){showErr(e)}
 }
-start();
+function showErr(e){$("app").innerHTML="<div class='card'><b>Lỗi khởi động:</b> "+esc(e&&e.message||e)+"</div>";}
+window.addEventListener("error",e=>{if(!$("app").innerHTML)showErr(e.message)});
+if(window.supabase)start();
+else{const sc=document.createElement("script");sc.src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+  sc.onload=start;sc.onerror=()=>{$("app").innerHTML="<div class='card'>Không tải được thư viện Supabase. Kiểm tra mạng hoặc tắt trình chặn quảng cáo rồi tải lại.</div>"};
+  document.head.appendChild(sc);}
 </script>
 </body>
 </html>
