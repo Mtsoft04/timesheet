@@ -225,6 +225,11 @@ td.busy{font-weight:600}
 .foot .ft b{display:block;font-size:14px}
 .foot .ft span{font-size:12px;color:var(--mut)}
 @media (max-width:600px){.top .mh{height:32px}.foot .mh{height:34px}}
+
+/* ===== Nhóm trưởng, xoá / rời nhóm ===== */
+button.dg{color:#dc2626;border-color:color-mix(in srgb,#dc2626 40%,var(--bd))}
+button.dg:hover{background:color-mix(in srgb,#dc2626 10%,transparent)}
+.chip.lead{background:color-mix(in srgb,#f59e0b 22%,transparent);color:#d97706;font-weight:600}
 </style>
 </head>
 <body>
@@ -340,7 +345,8 @@ function shell(){
   <li>Nút <b>🗳️ Bình chọn</b> trong nhóm: tạo tiêu đề kèm các phương án (hoặc dùng nhanh Đồng ý / Không đồng ý), mọi người bấm để vote. Người tạo có thể đóng hoặc xóa bình chọn. Bình chọn đã đóng chuyển sang thẻ <b>Lịch sử vote</b> (cột phải, dưới chat) với nút <b>Xem lại</b> để xem ai đã vote gì.</li>
   <li><b>💬 Chat nhóm</b> nằm ở cột phải phía trên: mọi người trong nhóm cùng nhắn tin, mỗi tin hiện rõ tên người gửi và giờ gửi. Bấm Enter để gửi.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
-  <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li></ul></div></div>
+  <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li>
+  <li><b>👑 Nhóm trưởng</b> là người tạo nhóm, có ký hiệu vương miện ở danh sách nhóm, thành viên và chat. Nhóm trưởng có nút <b>🗑️ Xoá nhóm</b> (xoá toàn bộ lịch, chat, bình chọn của nhóm). Thành viên tham gia bằng mã có nút <b>🚪 Rời nhóm</b> (lịch bận và phiếu bầu của bạn trong nhóm đó sẽ bị xoá).</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
   <div class="modal" id="prm" hidden><div class="card"><div class="row"><h2 style="margin:0" id="prh"></h2><span class="sp"></span><button id="prx">Đóng</button></div><div id="prb"></div></div></div>
   <div class="modal" id="apm" hidden><div class="card"><div class="row"><h2 style="margin:0">⤴ Áp dụng lịch cá nhân vào nhóm</h2><span class="sp"></span><button id="apx">Đóng</button></div><div id="apb"></div></div></div>
@@ -515,7 +521,7 @@ async function teamView(){
   team?openTeam(team.id):listTeams();
 }
 function listTeams(){
-  $("body").innerHTML=`<div class="cards3"><div class="card"><h2>Nhóm của tôi</h2><div class="teams">${teams.length?teams.map(t=>`<button data-t="${t.id}">${esc(t.name)}</button>`).join(""):"<span class='mut'>Bạn chưa có nhóm nào.</span>"}</div></div>
+  $("body").innerHTML=`<div class="cards3"><div class="card"><h2>Nhóm của tôi</h2><div class="teams">${teams.length?teams.map(t=>`<button data-t="${t.id}">${t.owner===user.id?"👑 ":""}${esc(t.name)}</button>`).join(""):"<span class='mut'>Bạn chưa có nhóm nào.</span>"}</div></div>
   <div class="card"><h2>Tạo nhóm mới</h2><div class="row"><input id="tn" class="sp" placeholder="Tên nhóm" maxlength="60"><button class="p" id="tc">Tạo nhóm</button></div></div>
   <div class="card"><h2>Tham gia bằng mã</h2><div class="row"><input id="jc" class="sp" placeholder="Nhập mã chia sẻ" maxlength="10"><button class="p" id="jb">Tham gia</button></div></div></div>`;
   document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>openTeam(b.dataset.t));
@@ -548,7 +554,7 @@ function renderChat(stick,top){const el=$("cl");if(!el)return;
   let day="",h="";
   chatMsgs.forEach(m=>{const d=new Date(m.created_at),dl=dayLabel(d),mine=m.user_id===user.id;
     if(dl!==day){day=dl;h+=`<div class="cday">${esc(dl)}</div>`;}
-    h+=`<div class="cm ${mine?"me":""}"><div class="ch"><b>${mine?"Bạn":esc(m.user_name)}</b> · <span title="${dmy(d)} ${hm(d)}:${p2(d.getSeconds())}">${hm(d)}</span></div><div class="cb">${esc(m.content)}</div></div>`;});
+    h+=`<div class="cm ${mine?"me":""}"><div class="ch"><b>${m.user_id===team.owner?"👑 ":""}${mine?"Bạn":esc(m.user_name)}</b> · <span title="${dmy(d)} ${hm(d)}:${p2(d.getSeconds())}">${hm(d)}</span></div><div class="cb">${esc(m.content)}</div></div>`;});
   el.innerHTML=h||"<div class='mut' style='text-align:center;padding:12px'>Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên 👋</div>";
   if(stick===true||(stick===undefined&&near))el.scrollTop=el.scrollHeight;else if(top!=null)el.scrollTop=top;}
 async function sendChat(){const i=$("ci"),t=i.value.trim();if(!t||chatErr)return;i.value="";
@@ -565,7 +571,8 @@ async function loadTeam(reset){
   const[a,b]=wkRange();
   const[m,z]=await Promise.all([SB.from("team_members").select("*").eq("team_id",team.id),SB.from("team_busy").select("*").eq("team_id",team.id).gte("slot_date",a).lte("slot_date",b)]);
   if(m.error||z.error)return say("Lỗi tải: "+(m.error||z.error).message);
-  members=m.data||[];busy=z.data||[];await loadPolls();if(chatTeam!==team.id){chatTeam=team.id;chatMsgs=[];await loadChat();}
+  members=m.data||[];busy=z.data||[];
+  if(!members.some(x=>x.user_id===user.id)){team=null;chatTeam=null;dirty=false;sel=new Set();say("Nhóm đã bị xoá hoặc bạn không còn trong nhóm này.");if(view==="team")teamView();return;}await loadPolls();if(chatTeam!==team.id){chatTeam=team.id;chatMsgs=[];await loadChat();}
   if(reset){dirty=false;sel=new Set();}
   if(reset||!dirty)tmine=new Map(busy.filter(x=>x.user_id===user.id).map(x=>[K(x.slot_date,x.hour),x.note||""]));
   if(reset||view==="team")drawTeam();
@@ -574,8 +581,8 @@ const me=()=>members.find(m=>m.user_id===user.id)||{};
 function noteOf(id,k){if(id===user.id)return tmine.get(k)||"";const[d,h]=k.split("|");return(busy.find(x=>x.user_id===id&&x.slot_date===d&&x.hour==h)||{}).note||"";}
 function renderMembers(){const el=$("ml");if(!el||!team)return;const q=($("mq").value||"").trim().toLowerCase(),done=members.filter(m=>m.done).length;
   $("mh").textContent="👥 Thành viên ("+members.length+")";$("ms").textContent=team.name+" · đã chốt "+done+"/"+members.length;
-  const list=members.filter(m=>(m.name||"").toLowerCase().includes(q)).sort((a,b)=>(+!!a.done-+!!b.done)||(a.name||"").localeCompare(b.name||"","vi"));
-  el.innerHTML=list.length?list.map(m=>`<div class="mrow"><span class="av">${esc((m.name||"?").trim().charAt(0).toUpperCase())}</span><span class="mn">${esc(m.name)}${m.user_id===user.id?" <small class='mut'>(Bạn)</small>":""}</span><span class="chip ${m.done?"ok":""}">${m.done?"✓ Đã chốt":"… Chưa chốt"}</span></div>`).join(""):"<div class='mut' style='padding:12px'>Không tìm thấy thành viên.</div>";}
+  const list=members.filter(m=>(m.name||"").toLowerCase().includes(q)).sort((a,b)=>(+(b.user_id===team.owner)-+(a.user_id===team.owner))||(+!!a.done-+!!b.done)||(a.name||"").localeCompare(b.name||"","vi"));
+  el.innerHTML=list.length?list.map(m=>`<div class="mrow"><span class="av">${esc((m.name||"?").trim().charAt(0).toUpperCase())}</span><span class="mn">${esc(m.name)}${m.user_id===user.id?" <small class='mut'>(Bạn)</small>":""}</span>${m.user_id===team.owner?`<span class="chip lead">👑 Nhóm trưởng</span>`:""}<span class="chip ${m.done?"ok":""}">${m.done?"✓ Đã chốt":"… Chưa chốt"}</span></div>`).join(""):"<div class='mut' style='padding:12px'>Không tìm thấy thành viên.</div>";}
 function openMembers(){$("mq").value="";renderMembers();$("mem").hidden=false;}
 function busyOf(k){const[d,h]=k.split("|");const ids=new Set(busy.filter(x=>x.slot_date===d&&x.hour==h&&x.user_id!==user.id).map(x=>x.user_id));if(tmine.has(k))ids.add(user.id);return[...ids];}
 function pollCard(p){
@@ -646,8 +653,9 @@ function drawTeam(){
   const w0=document.querySelector(".wrap,.polls"),st=w0?w0.scrollTop:0,ntv=$("nt")?$("nt").value:null;
   const cl0=$("cl"),cNear=!cl0||cl0.scrollHeight-cl0.scrollTop-cl0.clientHeight<60,cTop=cl0?cl0.scrollTop:0,civ=$("ci")?$("ci").value:"",cif=!!document.activeElement&&document.activeElement.id==="ci";
   const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all,pct=all?Math.round(done/all*100):0,openP=polls.filter(x=>!x.closed).length;
-  $("body").innerHTML=`<div class="split split3"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button></div><h2>${esc(team.name)}</h2>
+  $("body").innerHTML=`<div class="split split3"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button><span class="sp"></span><button id="tx" class="dg" title="${isOwner()?"Xoá nhóm này":"Rời khỏi nhóm này"}">${isOwner()?"🗑️ Xoá nhóm":"🚪 Rời nhóm"}</button></div><h2>${isOwner()?"👑 ":""}${esc(team.name)}</h2>
    <div class="row">Mã: <span class="code">${esc(team.code)}</span><span class="sp"></span><button id="cp">Sao chép</button></div>
+   <div class="mut">👑 Nhóm trưởng: <b>${esc(ownerName())}</b>${isOwner()?" (Bạn)":""}</div>
    <button id="mb" class="mem-btn"><span>👥 Thành viên (${all})</span><small>${done}/${all} đã chốt</small></button><div class="bar"><i style="width:${pct}%"></i></div>
    <div class="seg"><button id="v1" class="${tview==="mine"?"on":""}">Lịch bận của tôi</button><button id="v2" class="${tview==="res"?"on":""}">Kết quả chung</button></div>
    <button id="vb" class="mem-btn ${tview==="vote"?"on":""}"><span>🗳️ Bình chọn</span><small>${openP} đang mở</small></button>
@@ -659,6 +667,7 @@ function drawTeam(){
   const w=document.querySelector(".wrap,.polls");if(w)w.scrollTop=st;
   if(tview!=="vote")bindNav();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
+  $("tx").onclick=isOwner()?deleteTeam:leaveTeam;
   $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(team.code);say("Đã sao chép mã "+team.code)};
   renderChat(cNear,cTop);$("ci").value=civ;if(cif)$("ci").focus();
   $("ci").onkeydown=e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();sendChat()}};$("cs").onclick=sendChat;
@@ -703,6 +712,20 @@ async function unchot(){
   const r=await SB.from("team_members").update({done:false}).eq("team_id",team.id).eq("user_id",user.id);
   if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(true);
 }
+
+/* ---------- nhóm trưởng · xoá / rời nhóm ---------- */
+const isOwner=()=>!!team&&team.owner===user.id;
+const ownerName=()=>(members.find(m=>m.user_id===team.owner)||{}).name||"?";
+function rpcErr(e){return /function|schema cache|could not find/i.test(e.message||"")?"Chưa có hàm xử lý trên Supabase: hãy chạy đoạn SQL xoá/rời nhóm trong SQL Editor.":(e.message||String(e));}
+async function leaveOrDelete(fn,ask,done){
+  if(!confirm(ask))return;
+  dirty=false;
+  const r=await SB.rpc(fn,{p_team_id:team.id});
+  if(r.error)return say("Lỗi: "+rpcErr(r.error));
+  team=null;chatTeam=null;chatMsgs=[];sel=new Set();say(done);await teamView();
+}
+const deleteTeam=()=>leaveOrDelete("delete_team","Xoá nhóm \""+team.name+"\"?\n\nToàn bộ lịch bận, chat và bình chọn của nhóm sẽ bị xoá vĩnh viễn, mọi thành viên sẽ không còn thấy nhóm này. Không thể khôi phục.","✓ Đã xoá nhóm");
+const leaveTeam=()=>leaveOrDelete("leave_team","Rời nhóm \""+team.name+"\"?\n\nLịch bận và phiếu bầu của bạn trong nhóm này sẽ bị xoá. Muốn quay lại bạn cần nhập lại mã nhóm.","✓ Đã rời nhóm");
 
 /* ---------- vẽ lại theo ngữ cảnh ---------- */
 const _meView=meView,_drawMe=drawMe,_drawTeam=drawTeam;
