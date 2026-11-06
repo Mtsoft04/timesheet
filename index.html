@@ -230,6 +230,52 @@ td.busy{font-weight:600}
 button.dg{color:#dc2626;border-color:color-mix(in srgb,#dc2626 40%,var(--bd))}
 button.dg:hover{background:color-mix(in srgb,#dc2626 10%,transparent)}
 .chip.lead{background:color-mix(in srgb,#f59e0b 22%,transparent);color:#d97706;font-weight:600}
+
+/* ===== Trang bài viết ===== */
+.feedwrap{overflow-y:auto}
+@media (min-width:901px) and (min-height:560px){.feedwrap{height:100%}}
+.fcol{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding:2px 2px 30px}
+.fcol>.card,#plist>.card{margin:0}
+#plist{display:flex;flex-direction:column;gap:12px}
+textarea{padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;min-width:0;resize:none;transition:border-color .15s,box-shadow .15s}
+textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.composer textarea{flex:1;min-height:60px;max-height:260px}
+.filebtn{display:inline-block;padding:9px 15px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px;font-weight:600;cursor:pointer}
+.filebtn:hover{background:var(--head)}
+.pimgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pimgs:empty{display:none}
+.pthumb{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;border:1px solid var(--bd)}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb button{position:absolute;top:3px;right:3px;width:22px;height:22px;padding:0;border-radius:50%;background:rgba(15,23,42,.75);color:#fff;border:0;line-height:1;font-size:15px}
+.post{display:flex;flex-direction:column;gap:10px}
+.phd{display:flex;align-items:center;gap:10px}
+.phd .pmeta{margin-top:-2px}
+.pbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.55}
+.pgrid{display:grid;gap:4px;border-radius:12px;overflow:hidden}
+.pgrid.g1{grid-template-columns:1fr}.pgrid.g2,.pgrid.g3,.pgrid.g4{grid-template-columns:1fr 1fr}
+.pim{width:100%;display:block;object-fit:cover;cursor:zoom-in;background:var(--head)}
+.g1 .pim{max-height:480px}.g2 .pim,.g3 .pim,.g4 .pim{aspect-ratio:1/1}
+.g3 .pim:first-child{grid-column:1/3;aspect-ratio:2/1}
+.rxr{gap:6px;padding-top:4px;border-top:1px solid var(--bd)}
+.rx{padding:3px 10px;font-size:13px;border-radius:99px;font-weight:500}
+.rx.on{background:var(--acs);border-color:var(--ac);color:var(--ac)}
+.cms{display:flex;flex-direction:column;gap:8px}
+.cmt{display:flex;gap:8px;align-items:flex-start}
+.cmt .av{width:28px;height:28px;font-size:12px;font-style:normal}
+.cmc{flex:1;min-width:0}
+.cbub{background:var(--head);border-radius:14px;padding:6px 12px;display:inline-block;max-width:100%}
+.cbub b{font-size:13px}.cbub .tag{font-size:10px;padding:1px 7px;margin-left:4px}
+.ctx{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.4}
+.cmeta{display:flex;gap:12px;font-size:11px;color:var(--mut);margin:2px 8px 0}
+.lk{border:0;background:none;padding:0;font-size:11px;font-weight:600;color:var(--mut);cursor:pointer}
+.lk:hover{background:none;text-decoration:underline;color:var(--tx)}
+.reps{margin-left:36px;display:flex;flex-direction:column;gap:8px}.reps:empty{display:none}
+.cbox{display:flex;gap:6px;align-items:center}.cbox input{flex:1}
+.cmt .cbox{width:100%}
+.lbm{background:rgba(0,0,0,.88);z-index:60}
+.lbm img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
+.lbn,.lbx{position:fixed;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:42px;height:42px;padding:0;font-size:22px;line-height:1}
+.lbn:hover,.lbx:hover{background:rgba(255,255,255,.28)}
+#lbp{left:14px;top:50%}#lbn{right:14px;top:50%}.lbx{right:14px;top:14px}
 </style>
 </head>
 <body>
@@ -335,7 +381,7 @@ function authView(){
 
 /* ---------- khung chính ---------- */
 function shell(){
-  $("app").innerHTML=`<div class="shell"><div class="tabs"><div class="seg"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button></div><span class="sp"></span><button id="hp">📖 Hướng dẫn</button></div><div id="body"></div></div>
+  $("app").innerHTML=`<div class="shell"><div class="tabs"><div class="seg"><button id="tm">Lịch cá nhân</button><button id="tt">Lịch đội nhóm</button><button id="tp">📰 Bài viết</button></div><span class="sp"></span><button id="hp">📖 Hướng dẫn</button></div><div id="body"></div></div>
   <div class="modal" id="help" hidden><div class="card"><div class="row"><h2 style="margin:0">📖 Hướng dẫn &amp; lưu ý</h2><span class="sp"></span><button id="hx">Đóng</button></div><ul>
   <li><b>Ô xanh dương = giờ BẬN</b>, ô trống = giờ rảnh. Bấm hoặc kéo để tô.</li>
   <li>Lịch hiển thị theo <b>tuần</b>. Dùng nút ‹ ›, <b>Hôm nay</b> hoặc ô chọn ngày để chuyển tuần. Thay đổi chưa lưu sẽ tự lưu khi bạn chuyển tuần.</li>
@@ -346,9 +392,11 @@ function shell(){
   <li><b>💬 Chat nhóm</b> nằm ở cột phải phía trên: mọi người trong nhóm cùng nhắn tin, mỗi tin hiện rõ tên người gửi và giờ gửi. Bấm Enter để gửi.</li>
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li>
+  <li><b>📰 Bài viết</b>: đăng bài (kèm tối đa 4 ảnh) cho mọi người dùng thấy. Mỗi bài có thể thả cảm xúc (👍 ❤️ 😂 😮 😢 😡), bình luận và trả lời bình luận. Người đăng được xoá bài của mình; người đăng bài hoặc người viết bình luận được xoá bình luận.</li>
   <li><b>👑 Nhóm trưởng</b> là người tạo nhóm, có ký hiệu vương miện ở danh sách nhóm, thành viên và chat. Nhóm trưởng có nút <b>🗑️ Xoá nhóm</b> (xoá toàn bộ lịch, chat, bình chọn của nhóm). Thành viên tham gia bằng mã có nút <b>🚪 Rời nhóm</b> (lịch bận và phiếu bầu của bạn trong nhóm đó sẽ bị xoá).</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
   <div class="modal" id="prm" hidden><div class="card"><div class="row"><h2 style="margin:0" id="prh"></h2><span class="sp"></span><button id="prx">Đóng</button></div><div id="prb"></div></div></div>
+  <div class="modal lbm" id="lb" hidden><button id="lbp" class="lbn" title="Ảnh trước">‹</button><img id="lbi" alt=""><button id="lbn" class="lbn" title="Ảnh sau">›</button><button id="lbx" class="lbx" title="Đóng">✕</button></div>
   <div class="modal" id="apm" hidden><div class="card"><div class="row"><h2 style="margin:0">⤴ Áp dụng lịch cá nhân vào nhóm</h2><span class="sp"></span><button id="apx">Đóng</button></div><div id="apb"></div></div></div>
   <div class="modal" id="pcm" hidden><div class="card"><div class="row"><h2 style="margin:0">🗳️ Tạo bình chọn</h2><span class="sp"></span><button id="pcx">Đóng</button></div>
    <input id="pt" maxlength="120" placeholder="Tiêu đề, ví dụ: Họp nhóm vào 19h thứ Sáu?" style="width:100%;margin-top:12px">
@@ -356,7 +404,7 @@ function shell(){
    <div class="row"><button id="pa1">＋ Thêm phương án</button><button id="pa2">Đồng ý / Không đồng ý</button></div>
    <label class="row" style="margin-top:12px;gap:8px;cursor:pointer"><input type="checkbox" id="pmu"> Cho phép chọn nhiều phương án</label>
    <div class="row" style="margin-top:14px;justify-content:flex-end"><button id="pcc">Hủy</button><button class="p" id="pgo">Tạo bình chọn</button></div></div></div>`;
-  $("tm").onclick=()=>{view="me";go()};$("tt").onclick=()=>{view="team";go()};
+  $("tm").onclick=()=>{view="me";go()};$("tt").onclick=()=>{view="team";go()};$("tp").onclick=async()=>{await flush();view="posts";go()};
   $("hp").onclick=()=>{$("help").hidden=false};$("hx").onclick=()=>{$("help").hidden=true};
   $("help").onclick=e=>{if(e.target.id==="help")e.target.hidden=true};
   $("mx").onclick=()=>{$("mem").hidden=true};$("mem").onclick=e=>{if(e.target.id==="mem")e.target.hidden=true};$("mq").oninput=renderMembers;
@@ -364,12 +412,14 @@ function shell(){
   $("pa1").onclick=()=>{if(document.querySelectorAll("#po .row").length>=10)return say("Tối đa 10 phương án.");addOpt("").querySelector("input").focus()};
   $("pa2").onclick=()=>{$("po").innerHTML="";addOpt("Đồng ý");addOpt("Không đồng ý");if(!$("pt").value.trim())$("pt").focus()};
   $("pgo").onclick=submitPoll;
+  $("lbx").onclick=()=>{$("lb").hidden=true};$("lb").onclick=e=>{if(e.target.id==="lb")e.target.hidden=true};
+  $("lbp").onclick=()=>{lb.i=(lb.i+lb.l.length-1)%lb.l.length;showLb()};$("lbn").onclick=()=>{lb.i=(lb.i+1)%lb.l.length;showLb()};
   $("apx").onclick=()=>{$("apm").hidden=true};$("apm").onclick=e=>{if(e.target.id==="apm")e.target.hidden=true};
   $("prx").onclick=()=>{$("prm").hidden=true};$("prm").onclick=e=>{if(e.target.id==="prm")e.target.hidden=true};
   $("prb").onclick=async ev=>{const a=ev.target.closest("[data-a]");if(a&&await pollAction(revId,a.dataset.a))$("prm").hidden=true};
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm","apm"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
-function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";say("");view==="me"?meView():teamView();}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")["help","mem","pcm","prm","apm","lb"].forEach(i=>{const h=$(i);if(h)h.hidden=true})});
+function go(){$("tm").className=view==="me"?"on":"";$("tt").className=view==="team"?"on":"";$("tp").className=view==="posts"?"on":"";say("");view==="me"?meView():view==="posts"?postsView():teamView();}
 
 /* ---------- lịch cá nhân ---------- */
 async function meView(){
@@ -726,6 +776,151 @@ async function leaveOrDelete(fn,ask,done){
 }
 const deleteTeam=()=>leaveOrDelete("delete_team","Xoá nhóm \""+team.name+"\"?\n\nToàn bộ lịch bận, chat và bình chọn của nhóm sẽ bị xoá vĩnh viễn, mọi thành viên sẽ không còn thấy nhóm này. Không thể khôi phục.","✓ Đã xoá nhóm");
 const leaveTeam=()=>leaveOrDelete("leave_team","Rời nhóm \""+team.name+"\"?\n\nLịch bận và phiếu bầu của bạn trong nhóm này sẽ bị xoá. Muốn quay lại bạn cần nhập lại mã nhóm.","✓ Đã rời nhóm");
+
+/* ---------- trang bài viết ---------- */
+const EM=["👍","❤️","😂","😮","😢","😡"],PAGE=10,MAXIMG=4;
+const feed={posts:[],rx:[],cm:[],limit:PAGE,more:false,err:null,loaded:false,busy:false,openC:new Set(),reply:null};
+let pend=[],lb={l:[],i:0};
+const imgUrl=p=>SB.storage.from("post-images").getPublicUrl(p).data.publicUrl;
+const ini=n=>esc((n||"?").trim().charAt(0).toUpperCase());
+function ago(s){const sec=Math.floor((Date.now()-new Date(s))/1000);
+  if(sec<60)return"Vừa xong";if(sec<3600)return Math.floor(sec/60)+" phút trước";if(sec<86400)return Math.floor(sec/3600)+" giờ trước";if(sec<604800)return Math.floor(sec/86400)+" ngày trước";return dt(s);}
+async function shrink(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error("Không đọc được ảnh này."));i.src=url;});
+    const sc=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*sc)),h=Math.max(1,Math.round(img.naturalHeight*sc));
+    const c=document.createElement("canvas");c.width=w;c.height=h;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
+    return await new Promise((ok,no)=>c.toBlob(b=>b?ok(b):no(new Error("Không nén được ảnh.")),"image/jpeg",.82));
+  }finally{URL.revokeObjectURL(url)}
+}
+function openLb(l,i){if(!l.length)return;lb={l,i:i||0};showLb();$("lb").hidden=false;}
+function showLb(){$("lbi").src=lb.l[lb.i];$("lbp").hidden=$("lbn").hidden=lb.l.length<2;}
+document.addEventListener("keydown",e=>{const m=$("lb");if(!m||m.hidden||lb.l.length<2)return;
+  if(e.key==="ArrowLeft"){lb.i=(lb.i+lb.l.length-1)%lb.l.length;showLb()}else if(e.key==="ArrowRight"){lb.i=(lb.i+1)%lb.l.length;showLb()}});
+
+function postsView(){
+  ctx={cell:()=>({cls:""})};
+  $("body").innerHTML=`<div class="feedwrap"><div class="fcol">
+   <div class="card composer"><div class="row" style="align-items:flex-start;flex-wrap:nowrap;gap:10px"><i class="av">${ini(uname())}</i><textarea id="pbx" rows="2" maxlength="5000" placeholder="Bạn đang nghĩ gì?"></textarea></div>
+    <div class="pimgs" id="ppv"></div>
+    <div class="row" style="margin-top:10px"><label class="filebtn" for="pfi">🖼️ Thêm ảnh</label><input type="file" id="pfi" accept="image/*" multiple hidden><span class="mut" id="pcn"></span><span class="sp"></span><button class="p" id="pgo2">Đăng bài</button></div></div>
+   <div id="plist"></div></div></div>`;
+  const tx=$("pbx");tx.oninput=()=>{tx.style.height="auto";tx.style.height=Math.min(tx.scrollHeight+2,260)+"px"};
+  $("pfi").onchange=async e=>{const fs=[...e.target.files];e.target.value="";
+    for(const f of fs){if(pend.length>=MAXIMG){say("Tối đa "+MAXIMG+" ảnh mỗi bài.");break;}
+      if(!/^image\//.test(f.type)){say("Chỉ chọn được file ảnh.");continue;}
+      try{const b=await shrink(f);pend.push({blob:b,url:URL.createObjectURL(b)});renderPrev();}catch(er){say(er.message)}}};
+  $("pgo2").onclick=submitPost;
+  const pl=$("plist");pl.onclick=feedClick;
+  pl.onkeydown=e=>{const d=e.target.dataset&&e.target.dataset.draft;if(e.key==="Enter"&&!e.isComposing&&d){e.preventDefault();
+    d[0]==="r"?sendComment(feed.reply&&feed.reply.pid,d.slice(2)):sendComment(d.slice(2),null);}};
+  renderPrev();renderFeed();loadFeed();
+}
+function renderPrev(){const el=$("ppv");if(!el)return;
+  el.innerHTML=pend.map((x,i)=>`<div class="pthumb"><img src="${x.url}" alt=""><button data-rm="${i}" title="Bỏ ảnh">×</button></div>`).join("");
+  el.onclick=e=>{const b=e.target.closest("[data-rm]");if(!b)return;const[x]=pend.splice(+b.dataset.rm,1);URL.revokeObjectURL(x.url);renderPrev();};
+  $("pcn").textContent=pend.length?pend.length+"/"+MAXIMG+" ảnh":"";}
+async function submitPost(){
+  const t=$("pbx").value.trim();if(!t&&!pend.length)return say("Hãy viết nội dung hoặc thêm ảnh.");
+  const btn=$("pgo2");btn.disabled=true;btn.textContent="Đang đăng…";
+  const up=[],bk=()=>{btn.disabled=false;btn.textContent="Đăng bài"};
+  try{
+    for(let i=0;i<pend.length;i++){
+      const path=user.id+"/"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,8)+".jpg";
+      const r=await SB.storage.from("post-images").upload(path,pend[i].blob,{contentType:"image/jpeg",cacheControl:"31536000"});
+      if(r.error)throw new Error(/bucket|not found/i.test(r.error.message)?"Chưa tạo kho ảnh trên Supabase: hãy chạy đoạn SQL bài viết.":r.error.message);
+      up.push(path);}
+    const r=await SB.from("posts").insert({user_name:uname(),content:t,images:up}).select().single();
+    if(r.error)throw r.error;
+    pend.forEach(x=>URL.revokeObjectURL(x.url));pend=[];$("pbx").value="";$("pbx").style.height="auto";renderPrev();
+    say("✓ Đã đăng bài");await loadFeed();
+  }catch(e){if(up.length)SB.storage.from("post-images").remove(up);say("Lỗi: "+(e.message||e));}
+  finally{bk()}
+}
+async function loadFeed(){
+  if(!user||feed.busy)return;feed.busy=true;
+  try{
+    const n=feed.limit,r=await SB.from("posts").select("*").order("created_at",{ascending:false}).limit(n+1);
+    if(r.error){feed.err=r.error.message;feed.posts=[];feed.rx=[];feed.cm=[];}
+    else{feed.err=null;feed.more=r.data.length>n;feed.posts=r.data.slice(0,n);feed.rx=[];feed.cm=[];
+      const ids=feed.posts.map(p=>p.id);
+      if(ids.length){const[a,b]=await Promise.all([SB.from("post_reactions").select("*").in("post_id",ids),SB.from("post_comments").select("*").in("post_id",ids).order("created_at",{ascending:true})]);
+        if(a.error||b.error)feed.err=(a.error||b.error).message;else{feed.rx=a.data||[];feed.cm=b.data||[];}}}
+  }finally{feed.busy=false;feed.loaded=true;}
+  if(view==="posts")renderFeed();
+}
+function cmtHtml(c,p,isRep){
+  const can=c.user_id===user.id||p.user_id===user.id;
+  return `<div class="cmt"><i class="av">${ini(c.user_name)}</i><div class="cmc"><div class="cbub"><b>${esc(c.user_name)}</b>${c.user_id===p.user_id?`<span class="tag">Tác giả</span>`:""}<div class="ctx">${esc(c.content)}</div></div><div class="cmeta"><span title="${dt(c.created_at)}">${ago(c.created_at)}</span><button class="lk" data-a="rep" data-c="${c.id}">Trả lời</button>${can?`<button class="lk" data-a="dc" data-c="${c.id}">Xoá</button>`:""}</div></div></div>`;
+}
+function postHtml(p){
+  const rx=feed.rx.filter(x=>x.post_id===p.id),cm=feed.cm.filter(x=>x.post_id===p.id),my=(rx.find(x=>x.user_id===user.id)||{}).emoji,imgs=p.images||[];
+  const roots=cm.filter(c=>!c.parent_id),open=feed.openC.has(p.id),kids=id=>cm.filter(c=>c.parent_id===id);
+  const bar=EM.map(e=>{const l=rx.filter(x=>x.emoji===e),n=l.length;return `<button class="rx ${my===e?"on":""}" data-a="rx" data-e="${e}" title="${esc(l.map(x=>x.user_name||"?").join(", "))}">${e}${n?" "+n:""}</button>`}).join("");
+  const rbox=r=>feed.reply&&feed.reply.root===r?`<div class="cmt"><i class="av">${ini(uname())}</i><div class="cbox"><input data-draft="r:${r}" maxlength="1000" autocomplete="off" value="${esc(feed.reply.pre)}" placeholder="Trả lời ${esc(feed.reply.to)}…"><button class="p" data-a="send" data-r="${r}">Gửi</button><button data-a="cancel">Hủy</button></div></div>`:"";
+  return `<article class="card post" data-p="${p.id}"><div class="phd"><i class="av">${ini(p.user_name)}</i><div class="sp"><b>${esc(p.user_name)}</b><div class="pmeta" title="${dt(p.created_at)}">${ago(p.created_at)}</div></div>${p.user_id===user.id?`<button class="pa dg" data-a="del" title="Xoá bài viết">🗑️ Xoá</button>`:""}</div>
+   ${p.content?`<div class="pbody">${esc(p.content)}</div>`:""}
+   ${imgs.length?`<div class="pgrid g${Math.min(imgs.length,4)}">${imgs.map((x,i)=>`<img class="pim" loading="lazy" src="${esc(imgUrl(x))}" data-i="${i}" alt="">`).join("")}</div>`:""}
+   <div class="row rxr">${bar}<span class="sp"></span><button class="pa" data-a="tgl">💬 ${cm.length} bình luận</button></div>
+   ${open?`<div class="cms">${roots.map(c=>cmtHtml(c,p)+`<div class="reps">${kids(c.id).map(r=>cmtHtml(r,p)).join("")}${rbox(c.id)}</div>`).join("")}<div class="cbox"><input data-draft="c:${p.id}" maxlength="1000" autocomplete="off" placeholder="Viết bình luận…"><button class="p" data-a="send">Gửi</button></div></div>`:""}</article>`;
+}
+function renderFeed(){
+  const el=$("plist");if(!el)return;
+  const dr={},ae=document.activeElement,af=ae&&ae.dataset&&ae.dataset.draft;
+  el.querySelectorAll("[data-draft]").forEach(i=>{dr[i.dataset.draft]=i.value});
+  el.innerHTML=feed.err?`<div class="card mut">⚠️ Chưa dùng được bài viết: ${esc(feed.err)}.<br>Hãy chạy đoạn SQL bài viết trong Supabase → SQL Editor.</div>`
+   :!feed.loaded?`<div class="card mut">Đang tải…</div>`
+   :!feed.posts.length?`<div class="card mut" style="text-align:center">Chưa có bài viết nào. Hãy là người đăng bài đầu tiên ✍️</div>`
+   :feed.posts.map(postHtml).join("")+(feed.more?`<button data-a="more">Xem thêm bài viết</button>`:"");
+  for(const k in dr){const i=el.querySelector('[data-draft="'+k+'"]');if(i&&dr[k])i.value=dr[k];}
+  if(af){const i=el.querySelector('[data-draft="'+af+'"]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
+}
+function feedClick(ev){
+  const im=ev.target.closest("img.pim");
+  if(im){const c=im.closest("[data-p]"),p=feed.posts.find(x=>x.id===c.dataset.p);if(p)openLb((p.images||[]).map(imgUrl),+im.dataset.i);return;}
+  const b=ev.target.closest("[data-a]");if(!b)return;
+  const c=b.closest("[data-p]"),pid=c&&c.dataset.p,a=b.dataset.a;
+  if(a==="more"){feed.limit+=PAGE;loadFeed();}
+  else if(a==="rx")toggleRx(pid,b.dataset.e);
+  else if(a==="tgl"){feed.openC.has(pid)?feed.openC.delete(pid):feed.openC.add(pid);renderFeed();}
+  else if(a==="del")deletePost(pid);
+  else if(a==="rep"){const cm=feed.cm.find(x=>x.id===b.dataset.c);if(!cm)return;
+    feed.reply={pid,root:cm.parent_id||cm.id,to:cm.user_name,pre:cm.parent_id?"@"+cm.user_name+" ":""};renderFeed();
+    const i=document.querySelector('#plist [data-draft="r:'+feed.reply.root+'"]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
+  else if(a==="cancel"){feed.reply=null;renderFeed();}
+  else if(a==="send")sendComment(pid,b.dataset.r||null);
+  else if(a==="dc")deleteComment(b.dataset.c);
+}
+async function toggleRx(pid,e){
+  const m=feed.rx.find(x=>x.post_id===pid&&x.user_id===user.id);let r;
+  if(m&&m.emoji===e){feed.rx=feed.rx.filter(x=>x!==m);renderFeed();r=await SB.from("post_reactions").delete().eq("post_id",pid).eq("user_id",user.id);}
+  else{if(m)m.emoji=e;else feed.rx.push({post_id:pid,user_id:user.id,emoji:e,user_name:uname()});renderFeed();
+    r=await SB.from("post_reactions").upsert({post_id:pid,user_id:user.id,emoji:e,user_name:uname()},{onConflict:"post_id,user_id"});}
+  if(r.error){say("Lỗi: "+r.error.message);await loadFeed();}
+}
+async function sendComment(pid,root){
+  if(!pid)return;
+  const key=root?"r:"+root:"c:"+pid,inp=document.querySelector('#plist [data-draft="'+key+'"]'),t=inp&&inp.value.trim();if(!t)return;
+  inp.disabled=true;
+  const r=await SB.from("post_comments").insert({post_id:pid,parent_id:root||null,user_name:uname(),content:t}).select().single();
+  if(r.error){inp.disabled=false;return say("Lỗi: "+r.error.message);}
+  feed.cm.push(r.data);inp.value="";if(root)feed.reply=null;feed.openC.add(pid);renderFeed();
+  if(!root){const n=document.querySelector('#plist [data-draft="c:'+pid+'"]');if(n)n.focus();}
+}
+async function deleteComment(cid){
+  if(!confirm("Xoá bình luận này (kèm các phản hồi của nó)?"))return;
+  const r=await SB.from("post_comments").delete().eq("id",cid);if(r.error)return say("Lỗi: "+r.error.message);
+  feed.cm=feed.cm.filter(x=>x.id!==cid&&x.parent_id!==cid);if(feed.reply&&feed.reply.root===cid)feed.reply=null;renderFeed();
+}
+async function deletePost(pid){
+  const p=feed.posts.find(x=>x.id===pid);if(!p||!confirm("Xoá bài viết này? Bình luận và cảm xúc của bài cũng sẽ bị xoá."))return;
+  const r=await SB.from("posts").delete().eq("id",pid);if(r.error)return say("Lỗi: "+r.error.message);
+  if((p.images||[]).length)SB.storage.from("post-images").remove(p.images);
+  feed.posts=feed.posts.filter(x=>x.id!==pid);feed.rx=feed.rx.filter(x=>x.post_id!==pid);feed.cm=feed.cm.filter(x=>x.post_id!==pid);renderFeed();say("✓ Đã xoá bài viết");
+}
+setInterval(()=>{if(!user||view!=="posts"||feed.busy)return;
+  if([...document.querySelectorAll("#plist [data-draft]")].some(i=>i.value.trim()))return;loadFeed();},20000);
 
 /* ---------- vẽ lại theo ngữ cảnh ---------- */
 const _meView=meView,_drawMe=drawMe,_drawTeam=drawTeam;
