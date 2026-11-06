@@ -34,7 +34,10 @@ button.on{background:var(--acs);border-color:var(--ac);color:var(--ac)}
 .seg button.on{background:var(--card);color:var(--tx);box-shadow:var(--sh)}
 .mut{color:var(--mut);font-size:13px}
 .wrap{overflow:auto;max-height:68vh;border:1px solid var(--bd);border-radius:12px}
-table{border-collapse:separate;border-spacing:0;width:100%;min-width:620px;user-select:none;touch-action:none}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:620px;user-select:none;touch-action:pan-x pan-y}
+body.paintmode table{touch-action:none}
+.pmbtn{display:none}
+@media (pointer:coarse){.pmbtn{display:inline-block}.wrap{max-height:none}}
 th,td{border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);text-align:center;padding:0;height:27px;font-size:11px}
 th{background:var(--head);font-size:12px;font-weight:600;padding:6px 4px}
 tr:first-child th{position:sticky;top:0;z-index:2}
@@ -118,16 +121,25 @@ function grid(fn){
   return s+"</table></div>";
 }
 function navBar(){const b=addD(weekStart,6);
-  return"<div class='row nav'><button id='pw' title='Tuần trước'>‹</button><button id='tdy'>Hôm nay</button><button id='nw' title='Tuần sau'>›</button><input type='date' id='dp' value='"+selDate+"'><b>Tuần "+dm(weekStart)+" – "+dm(b)+"/"+b.getFullYear()+"</b></div>";}
-function bindNav(){
+  return"<div class='row nav'><button id='pw' title='Tuần trước'>‹</button><button id='tdy'>Hôm nay</button><button id='nw' title='Tuần sau'>›</button><input type='date' id='dp' value='"+selDate+"'><button id='pm' class='pmbtn "+(paintTouch?"on":"")+"'>✏️ Kéo để tô: "+(paintTouch?"Bật":"Tắt")+"</button><b>Tuần "+dm(weekStart)+" – "+dm(b)+"/"+b.getFullYear()+"</b></div>";}
+function bindNav(){bindPM();
   const to=async(ws,sd)=>{await flush();weekStart=ws;selDate=sd||fmt(ws);view==="me"?meView():loadTeam(true);};
   $("pw").onclick=()=>to(addD(weekStart,-7));$("nw").onclick=()=>to(addD(weekStart,7));
   $("tdy").onclick=()=>{const t=new Date();to(mondayOf(t),fmt(t))};
   $("dp").onchange=e=>{if(e.target.value){const d=parse(e.target.value);to(mondayOf(d),e.target.value);}};
 }
+function bindPM(){const b=$("pm");if(!b)return;b.onclick=()=>{paintTouch=!paintTouch;document.body.classList.toggle("paintmode",paintTouch);b.className="pmbtn "+(paintTouch?"on":"");b.textContent="✏️ Kéo để tô: "+(paintTouch?"Bật":"Tắt");say(paintTouch?"Kéo ngón tay để tô nhiều ô. Tắt đi để cuộn lịch.":"Đã tắt. Chạm từng ô để tô, kéo để cuộn.");};}
 async function flush(){if(view==="me"&&pdirty)await saveMe(true);else if(view==="team"&&team&&dirty&&tview==="mine")await saveTeam(false,true);}
 function refreshCell(k){const td=document.querySelector("td[data-k='"+k+"']");if(!td||!ctx)return;const c=ctx.cell(k);td.className="c "+c.cls;td.textContent=c.txt||"";td.title=c.tip||"";}
-document.addEventListener("pointerdown",e=>{const td=e.target.closest&&e.target.closest("td.c");if(!td||!ctx||!ctx.start)return;drag=ctx.start(td.dataset.k);e.preventDefault();ctx.apply(td.dataset.k,drag);});
+let paintTouch=false,handled=false;
+document.addEventListener("pointerdown",e=>{const td=e.target.closest&&e.target.closest("td.c");handled=false;
+  if(!td||!ctx||!ctx.start)return;
+  if(e.pointerType!=="mouse"&&!paintTouch)return;   // cảm ứng: để trình duyệt cuộn, tô bằng sự kiện click
+  handled=true;drag=ctx.start(td.dataset.k);e.preventDefault();ctx.apply(td.dataset.k,drag);});
+document.addEventListener("click",e=>{const td=e.target.closest&&e.target.closest("td.c");
+  if(handled){handled=false;return;}
+  if(!td||!ctx||!ctx.start)return;
+  ctx.apply(td.dataset.k,ctx.start(td.dataset.k));});
 document.addEventListener("pointermove",e=>{if(drag===null||!ctx)return;const t=document.elementFromPoint(e.clientX,e.clientY);if(t&&t.dataset&&t.dataset.k)ctx.apply(t.dataset.k,drag);});
 document.addEventListener("pointerup",()=>{drag=null});
 
