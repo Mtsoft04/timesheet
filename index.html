@@ -312,6 +312,38 @@ button#who .wn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-wid
 .pfl input{width:100%;color:var(--tx);font-weight:400;font-size:15px}
 .pferr{color:#dc2626;font-size:13px;min-height:18px;margin-bottom:8px}
 .pferr:empty{display:none}
+
+/* ===== Lưới rõ ràng · nút lớn · tổng hợp · chọn nhanh · khả dụng · lịch họp · chủ đề ===== */
+:root{--gl:#b4c1d6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gl:#3b4b6b}}
+:root[data-theme="dark"]{--gl:#3b4b6b}:root[data-theme="light"]{--gl:#b4c1d6}
+.wrap table th,.wrap table td{border-right:2px solid var(--gl);border-bottom:1px solid var(--gl)}
+.wrap table tr:nth-child(6n+2) td,.wrap table tr:nth-child(6n+2) th.t{border-top:2px solid var(--mut)}
+.wrap table tr:nth-child(even) td.c:not(.busy):not(.free):not(.part){background:color-mix(in srgb,var(--head) 45%,transparent)}
+.wrap table td.c:not(.busy):not(.free):not(.part):hover{background:var(--acs)}
+td.tsel{outline:3px solid #f59e0b;outline-offset:-3px}
+.big .side button{min-height:46px;font-size:15px;padding:11px 16px;border-radius:12px}
+.big .side .seg button{min-height:42px}
+.big .nav button,.big .nav input{min-height:42px;font-size:15px}.big .nav button{padding:8px 16px}
+.qk{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px dashed var(--gl);border-radius:12px}
+.dchips{display:flex;gap:6px}.side .dchips button{width:auto;flex:1;min-width:0;padding:8px 0;min-height:42px}
+.dc.on,.dc2.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.qrs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.side .qrs button{font-size:14px;padding:10px 6px;min-height:46px}
+.rcol>.sumc{flex:0 0 auto}
+.sumt{min-width:0;width:100%;border-collapse:collapse;table-layout:auto}
+.sumt tr td,.sumt tr th{height:auto;padding:5px 6px;font-size:13px;text-align:left;border:0;border-bottom:1px solid var(--bd);position:static;background:transparent}
+.sumt tr th{color:var(--mut);font-weight:600}
+.sumt .sb{color:var(--ac);font-weight:700}.sumt .sf{color:var(--free);font-weight:700}
+.sumt tr.tot td{font-weight:700;border-top:2px solid var(--gl)}
+.mini{display:block;height:8px;width:64px;background:var(--head);border-radius:9px;overflow:hidden}.mini i{display:block;height:100%;background:var(--ac)}
+.avp{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.avh{margin-top:4px;font-weight:600;font-size:13px}
+.ms{padding:7px 0;border-bottom:1px dashed var(--bd)}.ms .row{margin-top:5px}
+.btn{display:inline-block;padding:7px 12px;border:1px solid var(--bd);border-radius:10px;font-weight:600;font-size:13px;text-decoration:none;color:var(--tx);background:var(--card)}
+.side .ms button,.side .ms .btn{width:auto;padding:6px 10px;font-size:12px;min-height:0}
+.tg{padding:5px 12px;border-radius:99px;font-size:13px;font-weight:500}.tg.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.tfb,.tpx{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.htag{border:0;background:transparent;color:var(--ac);padding:0;font:inherit;font-weight:600;cursor:pointer}
+.qrow{margin-top:8px}.qa{padding:7px 12px;font-size:13px}
 </style>
 </head>
 <body>
@@ -360,6 +392,7 @@ $("thl").onclick=()=>setTheme("light");$("thd").onclick=()=>setTheme("dark");
 mq.addEventListener&&mq.addEventListener("change",paintTheme);paintTheme();
 let SB,user=null,view="me",ctx=null,drag=null;
 let mine=new Map(),sel=new Set(),pmode="paint",pdirty=false;          // cá nhân
+let tsel=null,mDur=1;
 let teams=[],team=null,members=[],busy=[],tmine=new Map(),tview="mine",dirty=false; // nhóm
 
 const uname=()=>(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email.split("@")[0];
@@ -445,6 +478,9 @@ function shell(){
   <li>Khi mọi người đã chốt, tab <b>Kết quả chung</b> hiện các giờ ai cũng rảnh (màu xanh lá).</li>
   <li>Những ai có mã nhóm đều xem được lịch bận của các thành viên trong nhóm đó.</li>
   <li><b>📰 Bài viết</b>: đăng bài (kèm tối đa 4 ảnh) cho mọi người dùng thấy. Mỗi bài có thể thả cảm xúc (👍 ❤️ 😂 😮 😢 😡), bình luận và trả lời bình luận. Người đăng được xoá bài của mình; người đăng bài hoặc người viết bình luận được xoá bình luận.</li>
+  <li><b>Lịch cá nhân nâng cao</b>: đường lưới rõ hơn, thẻ <b>⏱️ Tổng hợp giờ nhanh</b> (số giờ bận/rảnh từng ngày), mục <b>⚡ Chọn nhanh khung giờ</b> (chọn thứ rồi bấm Sáng / Chiều / Tối / Hành chính…) và nút bấm lớn hơn.</li>
+  <li><b>Kết quả chung của nhóm</b>: ô hiển thị dạng <b>số người khả dụng/tổng</b>; bấm một ô để xem tên người khả dụng và người bận. Thẻ <b>📅 Gợi ý lịch họp</b> tự tìm khung giờ cả nhóm cùng rảnh, cho <b>xuất .ics</b> (Google/Apple/Outlook), mở Google Lịch hoặc <b>🔔 báo vào chat nhóm</b>. Nhóm trưởng có thể bật tự động báo khi cả nhóm đã chốt.</li>
+  <li><b>📰 Bài viết</b>: bấm các nút <b>#chủ đề</b> khi soạn bài, dùng thanh <b>Lọc</b> để xem theo chủ đề. Nút <b>🔑 Chèn mã nhóm</b> / <b>📞 Chèn SĐT</b> giúp đăng nhanh; bài có mã nhóm hoặc số điện thoại sẽ hiện nút <b>📋 Sao chép mã</b> / <b>📞 Gọi</b>.</li>
   <li><b>👑 Nhóm trưởng</b> là người tạo nhóm, có ký hiệu vương miện ở danh sách nhóm, thành viên và chat. Nhóm trưởng có nút <b>🗑️ Xoá nhóm</b> (xoá toàn bộ lịch, chat, bình chọn của nhóm). Thành viên tham gia bằng mã có nút <b>🚪 Rời nhóm</b> (lịch bận và phiếu bầu của bạn trong nhóm đó sẽ bị xoá).</li></ul></div></div>
   <div class="modal" id="mem" hidden><div class="card"><div class="row"><h2 style="margin:0" id="mh">👥 Thành viên</h2><span class="sp"></span><button id="mx">Đóng</button></div><div class="mut" id="ms" style="margin:6px 0 10px"></div><input id="mq" placeholder="Tìm thành viên…" style="width:100%"><div class="mlist" id="ml"></div></div></div>
   <div class="modal" id="prm" hidden><div class="card"><div class="row"><h2 style="margin:0" id="prh"></h2><span class="sp"></span><button id="prx">Đóng</button></div><div id="prb"></div></div></div>
@@ -493,7 +529,7 @@ function noteBlocks(){const out=[],m=store();
       if(n){if(cur&&cur.note===n&&cur.e===h-1){cur.e=h;cur.keys.push(k);}else{cur={d:di,dt,s:h,e:h,note:n,keys:[k]};out.push(cur);}}else cur=null;}});
   return out;}
 function updSel(){const e=$("sc");if(e)e.textContent="Đã chọn "+sel.size+" ô";}
-function renderNotes(){const el=$("nl");if(!el)return;const bl=noteBlocks(),ed=canEdit();
+function renderNotes(){renderSum();const el=$("nl");if(!el)return;const bl=noteBlocks(),ed=canEdit();
   el.innerHTML=bl.length?bl.map((b,i)=>`<div class="ni" data-i="${i}" style="${ed?"":"cursor:default"}"><i class="dot n${hue(b.note)}"></i><div class="nt"><b>${DAYS[b.d]} ${dm(b.dt)} · ${b.s}:00–${b.e+1}:00</b><div>${esc(b.note)}</div></div>${ed?`<button class="nx" data-x="1" title="Xóa ghi chú này">×</button>`:""}</div>`).join(""):"<span class='mut'>Chưa có ghi chú nào trong tuần này.</span>";
   if(!ed){el.onclick=null;return;}
   el.onclick=ev=>{const it=ev.target.closest(".ni");if(!it)return;const b=bl[+it.dataset.i],m=store();
@@ -524,12 +560,12 @@ function bindNotes(){
 }
 function drawMe(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
-  $("body").innerHTML=`<div class="split split3"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}
+  $("body").innerHTML=`<div class="split split3 big"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}${quickPanel()}
    <button class="p" id="sv">Lưu lịch cá nhân</button>
    <button id="ap" title="Sao chép lịch cá nhân sang nhóm bạn chọn">⤴ Áp dụng lịch cá nhân vào nhóm</button></aside>
-   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section>${noteCard()}</div>`;
+   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section><div class="rcol">${sumCard()}${noteCard()}</div></div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
-  bindNav();bindNotes();
+  bindNav();bindNotes();bindQuick();
   $("sv").onclick=()=>saveMe(false);$("ap").onclick=openApply;
 }
 ctx={cell:()=>({cls:""})};
@@ -554,6 +590,29 @@ async function saveMe(silent){
   if(rows.length){r=await SB.from("personal_slots").insert(rows);if(r.error)return say("Lỗi: "+r.error.message);}
   pdirty=false;say(silent?"Đã tự lưu tuần vừa chỉnh":"✓ Đã lưu lịch cá nhân");
 }
+
+/* ---------- tổng hợp giờ nhanh · chọn khung giờ cố định ---------- */
+const sumCard=()=>`<aside class="card side sumc"><h2>⏱️ Tổng hợp giờ nhanh</h2><div id="sm"></div></aside>`;
+function renderSum(){const el=$("sm");if(!el)return;const m=store();let tb=0,rows="";
+  wkDates().forEach((dt,i)=>{const f=fmt(dt);let b=0;for(let h=0;h<24;h++)if(m.has(K(f,h)))b++;tb+=b;
+    rows+=`<tr><td>${DAYS[i]} <small class="mut">${dm(dt)}</small></td><td class="sb">${b}h</td><td class="sf">${24-b}h</td><td><span class="mini"><i style="width:${b/24*100}%"></i></span></td></tr>`;});
+  el.innerHTML=`<table class="sumt"><tr><th>Ngày</th><th>Bận</th><th>Rảnh</th><th></th></tr>${rows}<tr class="tot"><td>Cả tuần</td><td class="sb">${tb}h</td><td class="sf">${168-tb}h</td><td></td></tr></table>`;}
+let qDays=new Set([0,1,2,3,4]),qBusy=true;
+const QR=[["🌅 Sáng 6–12",6,12],["☀️ Chiều 12–18",12,18],["🌙 Tối 18–24",18,24],["🏢 Hành chính 8–17",8,17],["😴 Đêm 0–6",0,6],["📅 Cả ngày",0,24]];
+function quickPanel(){if(!canEdit()||pmode!=="paint")return"";
+  return `<div class="qk"><b>⚡ Chọn nhanh khung giờ</b>
+   <div class="dchips">${DAYS.map((d,i)=>`<button class="dc ${qDays.has(i)?"on":""}" data-qd="${i}">${d.replace("Thứ ","T")}</button>`).join("")}</div>
+   <div class="row"><button class="dc2 sp ${qBusy?"on":""}" id="qb1">Tô bận</button><button class="dc2 sp ${!qBusy?"on":""}" id="qb2">Bỏ tô</button></div>
+   <div class="qrs">${QR.map((r,i)=>`<button data-qr="${i}">${r[0]}</button>`).join("")}</div></div>`;}
+function bindQuick(){
+  document.querySelectorAll("[data-qd]").forEach(b=>b.onclick=()=>{const i=+b.dataset.qd;qDays.has(i)?qDays.delete(i):qDays.add(i);b.classList.toggle("on")});
+  const a=$("qb1"),c=$("qb2");if(!a)return;
+  a.onclick=()=>{qBusy=true;a.classList.add("on");c.classList.remove("on")};c.onclick=()=>{qBusy=false;c.classList.add("on");a.classList.remove("on")};
+  document.querySelectorAll("[data-qr]").forEach(b=>b.onclick=()=>{
+    if(!qDays.size)return say("Hãy chọn ít nhất một thứ.");
+    const[,s0,e0]=QR[+b.dataset.qr],m=store();let n=0;
+    wkDates().forEach((dt,i)=>{if(!qDays.has(i))return;const f=fmt(dt);for(let h=s0;h<e0;h++){const k=K(f,h);if(qBusy){if(!m.has(k)){m.set(k,"");n++}}else if(m.has(k)){m.delete(k);n++}}});
+    markDirty();redraw();say((qBusy?"Đã tô ":"Đã bỏ tô ")+n+" ô. Nhớ bấm Lưu.")});}
 
 /* ---------- áp dụng lịch cá nhân vào nhóm ---------- */
 async function openApply(){
@@ -664,7 +723,7 @@ async function sendChat(){const i=$("ci"),t=i.value.trim();if(!t||chatErr)return
   if(r.error){i.value=t;return say("Lỗi gửi tin: "+r.error.message);}
   if(!chatMsgs.find(m=>m.id===r.data.id))chatMsgs.push(r.data);renderChat(true);i.focus();}
 const chatCard=()=>`<aside class="card side chat"><h2>💬 Chat nhóm</h2><div class="cl" id="cl"></div><div class="row cin"><input id="ci" class="sp" maxlength="500" placeholder="Nhập tin nhắn…" autocomplete="off"${chatErr?" disabled":""}><button class="p" id="cs">Gửi</button></div></aside>`;
-const freeCard=()=>`<aside class="card side notes"><h2>🟢 Khung giờ rảnh chung</h2><div class="mut" style="font-size:12px;margin-top:-6px">Mọi người đều rảnh trong tuần đang xem</div><div id="fr" class="free-list"></div></aside>`;
+const freeCard=()=>`<aside class="card side notes"><h2>🟢 Khung giờ rảnh chung</h2><div class="mut" style="font-size:12px;margin-top:-6px">Mọi người đều rảnh trong tuần đang xem</div><div id="av" class="avp"></div><div class="mut" style="font-size:12px;margin:6px 0 2px"><b>Các khung giờ cả nhóm cùng rảnh</b></div><div id="fr" class="free-list"></div></aside>`;
 async function loadPolls(){polls=[];pollErr=null;if(!team)return;
   const r=await SB.from("polls").select("*,poll_options(id,label,position),poll_votes(option_id,user_id)").eq("team_id",team.id).order("created_at",{ascending:false});
   if(r.error)pollErr=r.error.message;else polls=r.data||[];}
@@ -765,7 +824,7 @@ function drawTeam(){
    :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu. Khi đóng, bình chọn được chuyển sang Lịch sử vote.</p><span class="sp"></span><button class="p" id="pc">＋ Tạo bình chọn</button>`
    :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`}
    </aside>
-   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section><div class="rcol">${chatCard()}${tview==="mine"?noteCard():tview==="res"?freeCard():historyCard()}</div></div>`;
+   <section class="card pane">${tview==="vote"?votePane():`<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`}</section><div class="rcol">${chatCard()}${tview==="mine"?noteCard():tview==="res"?freeCard()+meetCard():historyCard()}</div></div>`;
   const w=document.querySelector(".wrap,.polls");if(w)w.scrollTop=st;
   if(tview!=="vote")bindNav();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
@@ -786,16 +845,19 @@ function drawTeam(){
 function setTeamCtx(){
   if(tview==="vote"){ctx={cell:()=>({cls:""})};return;}
   if(tview==="mine"){ctx=team&&!me().done?mkCtx():{cell:cellOf};return;}
-  ctx={cell:k=>{
-    const b=busyOf(k);if(!b.length)return{cls:"free",txt:"✓"};
-    return{cls:"part",txt:b.length,tip:"Bận: "+b.map(i=>{const nm=(members.find(m=>m.user_id===i)||{}).name,nt=noteOf(i,k);return nm+(nt?" ("+nt+")":"")}).join(", ")};}};
+  const tot=members.length;
+  ctx={cell:k=>{const bi=busyOf(k),set=new Set(bi),av=members.filter(m=>!set.has(m.user_id)).map(m=>m.name),sl=k===tsel?" tsel":"",c=(tot-bi.length)+"/"+tot;
+    if(!bi.length)return{cls:"free"+sl,txt:"✓ "+c,tip:"Khả dụng: "+av.join(", ")};
+    return{cls:"part"+sl,txt:c,tip:"Khả dụng: "+(av.join(", ")||"không ai")+"\nBận: "+bi.map(i=>{const nm=(members.find(m=>m.user_id===i)||{}).name,nt=noteOf(i,k);return nm+(nt?" ("+nt+")":"")}).join(", ")};},
+   start:k=>k,
+   apply:k=>{const o=tsel;tsel=k;if(o&&o!==k)refreshCell(o,true);refreshCell(k,true);renderAvail();}};
 }
 function showFree(){
   let out="";
   wkDates().forEach((dt,d)=>{const f=fmt(dt);let r=[],s=null;
     for(let h=0;h<=24;h++){const free=h<24&&!busyOf(K(f,h)).length;if(free&&s===null)s=h;if(!free&&s!==null){r.push(s+":00–"+h+":00");s=null;}}
     if(r.length)out+="<div><b>"+DAYS[d]+" "+dm(dt)+":</b> "+r.join(", ")+"</div>";});
-  $("fr").innerHTML=(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");
+  $("fr").innerHTML=(out||"<div class='mut'>Không có khung giờ nào trùng.</div>");renderAvail();renderMeet();bindMeet();
 }
 async function saveTeam(chot,silent){
   if(!silent)say("Đang lưu…");
@@ -815,6 +877,54 @@ async function unchot(){
   if(r.error)return say("Lỗi: "+r.error.message);await loadTeam(true);
 }
 
+/* ---------- thành viên khả dụng · gợi ý / xuất / báo lịch họp ---------- */
+function renderAvail(){const el=$("av");if(!el)return;
+  if(!tsel||!wkDates().some(d=>tsel.startsWith(fmt(d)+"|"))){el.innerHTML="<div class='mut'>Bấm vào một ô trên lịch để xem ai khả dụng, ai bận.</div>";return;}
+  const[d,h]=tsel.split("|"),bi=new Set(busyOf(tsel)),av=members.filter(m=>!bi.has(m.user_id)),bz=members.filter(m=>bi.has(m.user_id)),dt0=parse(d);
+  el.innerHTML=`<div><b>${DAYS[(dt0.getDay()+6)%7]} ${dm(dt0)} · ${h}:00–${+h+1}:00</b></div>
+   <div class="avh">✅ Khả dụng (${av.length}/${members.length})</div><div>${av.length?av.map(m=>`<span class="chip ok">${esc(m.name)}</span>`).join(""):"<span class='mut'>Không ai khả dụng</span>"}</div>
+   <div class="avh">⛔ Đang bận (${bz.length})</div><div>${bz.length?bz.map(m=>{const n=noteOf(m.user_id,tsel);return`<span class="chip">${esc(m.name)}${n?" · "+esc(n):""}</span>`}).join(""):"<span class='mut'>Không ai bận</span>"}</div>`;}
+const meetCard=()=>`<aside class="card side notes"><h2>📅 Gợi ý lịch họp</h2><div class="row"><span class="mut">Thời lượng</span><select id="md">${[1,2,3,4].map(n=>`<option value="${n}" ${n===mDur?"selected":""}>${n} giờ</option>`).join("")}</select></div>
+  <div id="mt" class="free-list"></div>
+  <div class="row"><button id="mn" title="Gửi các khung giờ gợi ý vào chat nhóm">🔔 Báo cho nhóm</button><button id="mx">⬇ Xuất tất cả (.ics)</button></div>
+  ${isOwner()?`<label class="row" style="gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="ma"> Tự động báo vào chat khi cả nhóm đã chốt</label>`:""}</aside>`;
+const stamp=(d,h)=>fmt(d).replace(/-/g,"")+"T"+pad(h)+"0000";
+const icsEsc=t=>String(t).replace(/([\\;,])/g,"\\$1").replace(/\n/g,"\\n");
+function meetSlots(){const out=[],now=new Date();
+  wkDates().forEach((dt,di)=>{const f=fmt(dt);let s0=null;
+    for(let h=7;h<=22;h++){const free=h<22&&!busyOf(K(f,h)).length;
+      if(free&&s0===null)s0=h;
+      if(!free&&s0!==null){if(h-s0>=mDur&&new Date(dt.getFullYear(),dt.getMonth(),dt.getDate(),s0)>now)out.push({dt,di,s:s0,e:s0+mDur,run:h-s0});s0=null;}}});
+  return out.slice(0,8);}
+const gcal=x=>"https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent("Họp "+team.name)+"&dates="+stamp(x.dt,x.s)+"/"+stamp(x.dt,x.e)+"&details="+encodeURIComponent("Khung giờ cả nhóm cùng rảnh (Timesheet)");
+function renderMeet(){const el=$("mt");if(!el)return;const sl=meetSlots(),done=members.filter(m=>m.done).length;
+  el.innerHTML=(done<members.length?`<div class="mut" style="margin-bottom:4px">⏳ Mới ${done}/${members.length} người chốt, gợi ý tạm tính.</div>`:"")
+   +(sl.length?sl.map((x,i)=>`<div class="ms"><b>${DAYS[x.di]} ${dm(x.dt)} · ${x.s}:00–${x.e}:00</b> <small class="mut">(rảnh liên tục ${x.run}h)</small><div class="row"><button data-ics="${i}">⬇ .ics</button><a class="btn" target="_blank" rel="noopener" href="${esc(gcal(x))}">Google Lịch</a></div></div>`).join(""):`<div class="mut">Chưa có khung ${mDur} giờ liên tục (trong 7:00–22:00) mà cả nhóm cùng rảnh.</div>`);
+  el.onclick=ev=>{const b=ev.target.closest("[data-ics]");if(b)downloadIcs(sl[+b.dataset.ics]);};}
+function downloadIcs(x){const L=Array.isArray(x)?x:[x],z=new Date().toISOString().replace(/[-:]|\.\d{3}/g,"");
+  const ev=L.map(v=>["BEGIN:VEVENT","UID:ts-"+team.id+"-"+stamp(v.dt,v.s)+"@timesheet","DTSTAMP:"+z,"DTSTART:"+stamp(v.dt,v.s),"DTEND:"+stamp(v.dt,v.e),"SUMMARY:"+icsEsc("Họp "+team.name),"DESCRIPTION:"+icsEsc("Khung giờ cả nhóm cùng rảnh (Timesheet)"),"END:VEVENT"].join("\r\n")).join("\r\n");
+  const txt="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Timesheet//VI\r\nCALSCALE:GREGORIAN\r\n"+ev+"\r\nEND:VCALENDAR\r\n";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/calendar;charset=utf-8"}));
+  a.download="lich-hop-"+(L.length>1?"nhom":stamp(L[0].dt,L[0].s).slice(0,8))+".ics";document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);say("✓ Đã xuất file lịch .ics");}
+async function notifyTeam(auto){const sl=meetSlots().slice(0,5);if(!sl.length){if(!auto)say("Chưa có khung giờ nào để báo.");return;}
+  const t=(auto?"🤖 Tự động: ":"")+"📅 Gợi ý lịch họp ("+mDur+"h): "+sl.map(x=>DAYS[x.di]+" "+dm(x.dt)+" "+x.s+":00–"+x.e+":00").join(" · ");
+  const r=await SB.from("team_messages").insert({team_id:team.id,user_id:user.id,user_name:uname(),content:t.slice(0,500)}).select().single();
+  if(r.error)return say("Lỗi gửi: "+r.error.message);
+  if(!chatMsgs.find(m=>m.id===r.data.id))chatMsgs.push(r.data);renderChat(true);say("✓ Đã gửi gợi ý lịch họp vào chat nhóm");}
+const aKey=()=>"tsAuto:"+team.id;
+function autoNotify(){if(!isOwner()||members.length<2||!members.every(m=>m.done))return;
+  let on=false,sent=null;const sk="tsSent:"+team.id+":"+fmt(weekStart);
+  try{on=localStorage.getItem(aKey())==="1";sent=localStorage.getItem(sk)}catch(e){}
+  if(on&&!sent){try{localStorage.setItem(sk,"1")}catch(e){}notifyTeam(true);}}
+function bindMeet(){const d=$("md");if(!d)return;
+  d.onchange=()=>{mDur=+d.value;renderMeet()};
+  $("mn").onclick=()=>notifyTeam(false);
+  $("mx").onclick=()=>{const sl=meetSlots();sl.length?downloadIcs(sl):say("Chưa có khung giờ nào để xuất.")};
+  const ma=$("ma");if(ma){let on=false;try{on=localStorage.getItem(aKey())==="1"}catch(e){}ma.checked=on;
+    ma.onchange=()=>{try{localStorage.setItem(aKey(),ma.checked?"1":"0")}catch(e){}if(ma.checked)autoNotify();};}
+  autoNotify();}
+
 /* ---------- nhóm trưởng · xoá / rời nhóm ---------- */
 const isOwner=()=>!!team&&team.owner===user.id;
 const ownerName=()=>(members.find(m=>m.user_id===team.owner)||{}).name||"?";
@@ -831,7 +941,7 @@ const leaveTeam=()=>leaveOrDelete("leave_team","Rời nhóm \""+team.name+"\"?\n
 
 /* ---------- trang bài viết ---------- */
 const EM=["👍","❤️","😂","😮","😢","😡"],PAGE=10,MAXIMG=4;
-const feed={posts:[],rx:[],cm:[],limit:PAGE,more:false,err:null,loaded:false,busy:false,openC:new Set(),reply:null,focus:null,ft:0};
+const feed={posts:[],rx:[],cm:[],limit:PAGE,more:false,err:null,loaded:false,busy:false,openC:new Set(),reply:null,focus:null,ft:0,tag:null};
 const uuid=()=>crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:r&3|8).toString(16)});
 let pend=[],lb={l:[],i:0};
 const imgUrl=p=>SB.storage.from("post-images").getPublicUrl(p).data.publicUrl;
@@ -857,7 +967,8 @@ function postsView(){
   $("body").innerHTML=`<div class="feedwrap"><div class="fcol">
    <div class="card composer"><div class="row" style="align-items:flex-start;flex-wrap:nowrap;gap:10px"><i class="av">${avInner(avUrl(),uname())}</i><textarea id="pbx" rows="2" maxlength="5000" placeholder="Bạn đang nghĩ gì?"></textarea></div>
     <div class="pimgs" id="ppv"></div>
-    <div class="row" style="margin-top:10px"><label class="filebtn" for="pfi">🖼️ Thêm ảnh</label><input type="file" id="pfi" accept="image/*" multiple hidden><span class="mut" id="pcn"></span><span class="sp"></span><button class="p" id="pgo2">Đăng bài</button></div></div>
+    <div class="tpx" id="tpx"><span class="mut">Chủ đề:</span>${TOPICS.map(t=>`<button type="button" class="tg" data-ins="#${t.replace(/\s+/g,"-")} ">#${t}</button>`).join("")}</div><div class="tpx" id="tmn"></div>
+    <div class="row" style="margin-top:10px"><label class="filebtn" for="pfi">🖼️ Thêm ảnh</label><input type="file" id="pfi" accept="image/*" multiple hidden><button type="button" id="pcode" title="Chèn mã nhóm của bạn vào bài viết">🔑 Chèn mã nhóm</button>${meta().phone?`<button type="button" id="pph" title="Chèn số điện thoại trong hồ sơ">📞 Chèn SĐT</button>`:""}<span class="mut" id="pcn"></span><span class="sp"></span><button class="p" id="pgo2">Đăng bài</button></div></div>
    <div id="plist"></div></div></div>`;
   const tx=$("pbx");tx.oninput=()=>{tx.style.height="auto";tx.style.height=Math.min(tx.scrollHeight+2,260)+"px"};
   $("pfi").onchange=async e=>{const fs=[...e.target.files];e.target.value="";
@@ -865,7 +976,16 @@ function postsView(){
       if(!/^image\//.test(f.type)){say("Chỉ chọn được file ảnh.");continue;}
       try{const b=await shrink(f);pend.push({blob:b,url:URL.createObjectURL(b)});renderPrev();}catch(er){say(er.message)}}};
   $("pgo2").onclick=submitPost;
-  const pl=$("plist");pl.onclick=feedClick;
+  const ins=v=>{const x=$("pbx");x.value+=(x.value&&!/\s$/.test(x.value)?" ":"")+v;x.focus();x.oninput()};
+  $("tpx").onclick=e=>{const b=e.target.closest("[data-ins]");if(b&&!$("pbx").value.includes(b.dataset.ins.trim()))ins(b.dataset.ins)};
+  $("pcode").onclick=async()=>{const r=await SB.from("teams").select("name,code");if(r.error)return say("Lỗi: "+r.error.message);
+    const L=r.data||[];if(!L.length)return say("Bạn chưa tham gia nhóm nào.");
+    if(L.length===1)return ins("Mã nhóm: "+L[0].code+" ("+L[0].name+") ");
+    $("tmn").innerHTML=L.map(t=>`<button type="button" class="tg" data-ins="Mã nhóm: ${esc(t.code)} (${esc(t.name)}) ">🔑 ${esc(t.name)} · ${esc(t.code)}</button>`).join("");
+    $("tmn").onclick=e=>{const b=e.target.closest("[data-ins]");if(b){ins(b.dataset.ins);$("tmn").innerHTML=""}};};
+  if($("pph"))$("pph").onclick=()=>ins("SĐT: "+meta().phone+" ");
+  const pl=$("plist");pl.onclick=ev=>{const t=ev.target.closest("[data-tag]");if(t){feed.tag=t.dataset.tag||null;renderFeed();return;}
+    const c=ev.target.closest("[data-copy]");if(c){copyText(c.dataset.copy);return;}feedClick(ev);};
   pl.onkeydown=e=>{const d=e.target.dataset&&e.target.dataset.draft;if(e.key==="Enter"&&!e.isComposing&&d){e.preventDefault();
     d[0]==="r"?sendComment(feed.reply&&feed.reply.pid,d.slice(2)):sendComment(d.slice(2),null);}};
   renderPrev();renderFeed();loadFeed();
@@ -914,19 +1034,19 @@ function postHtml(p){
   const bar=EM.map(e=>{const l=rx.filter(x=>x.emoji===e),n=l.length;return `<button class="rx ${my===e?"on":""}" data-a="rx" data-e="${e}" title="${esc(l.map(x=>x.user_name||"?").join(", "))}">${e}${n?" "+n:""}</button>`}).join("");
   const rbox=r=>feed.reply&&feed.reply.root===r?`<div class="cmt"><i class="av">${ini(uname())}</i><div class="cbox"><input data-draft="r:${r}" maxlength="1000" autocomplete="off" value="${esc(feed.reply.pre)}" placeholder="Trả lời ${esc(feed.reply.to)}…"><button class="p" data-a="send" data-r="${r}">Gửi</button><button data-a="cancel">Hủy</button></div></div>`:"";
   return `<article class="card post" data-p="${p.id}"><div class="phd"><i class="av">${ini(p.user_name)}</i><div class="sp"><b>${esc(p.user_name)}</b><div class="pmeta" title="${dt(p.created_at)}">${ago(p.created_at)}</div></div>${p.user_id===user.id?`<button class="pa dg" data-a="del" title="Xoá bài viết">🗑️ Xoá</button>`:""}</div>
-   ${p.content?`<div class="pbody">${esc(p.content)}</div>`:""}
+   ${p.content?`<div class="pbody">${rich(p.content)}</div>${quick(p)}`:""}
    ${imgs.length?`<div class="pgrid g${Math.min(imgs.length,4)}">${imgs.map((x,i)=>`<img class="pim" loading="lazy" src="${esc(imgUrl(x))}" data-i="${i}" alt="">`).join("")}</div>`:""}
    <div class="row rxr">${bar}<span class="sp"></span><button class="pa" data-a="tgl">💬 ${cm.length} bình luận</button></div>
    ${open?`<div class="cms">${roots.map(c=>cmtHtml(c,p)+`<div class="reps">${kids(c.id).map(r=>cmtHtml(r,p)).join("")}${rbox(c.id)}</div>`).join("")}<div class="cbox"><input data-draft="c:${p.id}" maxlength="1000" autocomplete="off" placeholder="Viết bình luận…"><button class="p" data-a="send">Gửi</button></div></div>`:""}</article>`;
 }
 function renderFeed(){
   const el=$("plist");if(!el)return;
-  const dr={},ae=document.activeElement,af=ae&&ae.dataset&&ae.dataset.draft;
+  const fp=feed.tag?feed.posts.filter(p=>tagsOf(p).includes(feed.tag)):feed.posts;const dr={},ae=document.activeElement,af=ae&&ae.dataset&&ae.dataset.draft;
   el.querySelectorAll("[data-draft]").forEach(i=>{dr[i.dataset.draft]=i.value});
   el.innerHTML=feed.err?`<div class="card mut">⚠️ Chưa dùng được bài viết: ${esc(feed.err)}.<br>Hãy chạy đoạn SQL bài viết trong Supabase → SQL Editor.</div>`
    :!feed.loaded?`<div class="card mut">Đang tải…</div>`
    :!feed.posts.length?`<div class="card mut" style="text-align:center">Chưa có bài viết nào. Hãy là người đăng bài đầu tiên ✍️</div>`
-   :feed.posts.map(postHtml).join("")+(feed.more?`<button data-a="more">Xem thêm bài viết</button>`:"");
+   :tagBar()+(fp.length?fp.map(postHtml).join(""):"<div class='card mut' style='text-align:center'>Không có bài viết nào với chủ đề này.</div>")+(feed.more?`<button data-a="more">Xem thêm bài viết</button>`:"");
   for(const k in dr){const i=el.querySelector('[data-draft="'+k+'"]');if(i&&dr[k])i.value=dr[k];}
   if(af){const i=el.querySelector('[data-draft="'+af+'"]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
   if(feed.focus&&feed.loaded){const a=el.querySelector('[data-p="'+feed.focus+'"]');
@@ -981,6 +1101,22 @@ async function deletePost(pid){
 }
 setInterval(()=>{if(!user||view!=="posts"||feed.busy)return;
   if([...document.querySelectorAll("#plist [data-draft]")].some(i=>i.value.trim()))return;loadFeed();},20000);
+
+/* ---------- chủ đề · sao chép mã nhóm · gọi nhanh ---------- */
+const TOPICS=["Thông báo","Họp","Học tập","Công việc","Chia sẻ","Hỏi đáp"];
+const TAGRE=/(?:^|\s)#[\p{L}\p{N}_-]+/gu,PH=/(?:\+?84|0)(?:[\s.-]?\d){8,10}/g,CD=/m[ãa]\s*(?:nhóm|nhom)?\s*[:：]?\s*([A-Za-z0-9]{6})\b/i;
+const tagsOf=p=>[...new Set(((p.content||"").match(TAGRE)||[]).map(x=>x.trim().slice(1)))];
+const rich=t=>esc(t).replace(/(^|\s)#([\p{L}\p{N}_-]+)/gu,'$1<button class="htag" data-tag="$2">#$2</button>');
+function tagBar(){const c={};feed.posts.forEach(p=>tagsOf(p).forEach(t=>c[t]=(c[t]||0)+1));const ks=Object.keys(c).sort((a,b)=>c[b]-c[a]);
+  if(!ks.length)return"<div class='mut' style='margin:0 2px 10px;font-size:13px'>💡 Thêm #chủ-đề vào bài viết để mọi người lọc theo chủ đề.</div>";
+  return"<div class='tfb'><span class='mut'>Lọc:</span><button class='tg "+(!feed.tag?"on":"")+"' data-tag=''>Tất cả ("+feed.posts.length+")</button>"+ks.map(t=>"<button class='tg "+(feed.tag===t?"on":"")+"' data-tag='"+esc(t)+"'>#"+esc(t)+" ("+c[t]+")</button>").join("")+"</div>";}
+function quick(p){const t=p.content||"",out=[],seen=new Set();
+  (t.match(PH)||[]).forEach(x=>{const n=x.replace(/[^\d+]/g,"");if(n.length>=9&&!seen.has(n)&&seen.size<2){seen.add(n);out.push(`<a class="btn qa" href="tel:${n}">📞 Gọi ${esc(x.trim())}</a>`)}});
+  const c=t.match(CD);if(c){const code=c[1].toUpperCase();out.push(`<button class="qa" data-copy="${esc(code)}">📋 Sao chép mã ${esc(code)}</button>`);}
+  return out.length?`<div class="row qrow">${out.join("")}</div>`:"";}
+function copyText(t){const ok=()=>say("✓ Đã sao chép: "+t.slice(0,40));
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,()=>say("Không sao chép được."));
+  else{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){say("Không sao chép được.")}a.remove()}}
 
 /* ---------- chuông thông báo ---------- */
 let notifs=[],nf="all",nSeen=null,nCh=null,nUser=null,nErr=null,pendTview=null;
