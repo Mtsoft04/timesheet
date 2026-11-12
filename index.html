@@ -1899,7 +1899,7 @@ async function liveStart(){
 
 /* ---------- thông báo đẩy khi đã đóng trang (web push) ---------- */
 // Khóa công khai VAPID (tạo bằng: npx web-push generate-vapid-keys). Xem HUONG-DAN-V3.md
-const VAPID_PUBLIC_KEY="DAN_VAPID_PUBLIC_KEY";
+const VAPID_PUBLIC_KEY="BAYiNYal3u0PyKDesIH5q9QCzD0XkoRrw2DxvlqRf7_XY-G_fsdbrMoWBe2crBWrf2itAERshAtdxoFbV00bXvA";
 const pushOk=()=>("serviceWorker" in navigator)&&("PushManager" in window)&&("Notification" in window);
 const b64u=s=>{const p="=".repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)));};
 async function pushSub(){try{const reg=await navigator.serviceWorker.getRegistration();return reg?await reg.pushManager.getSubscription():null;}catch(e){return null;}}
