@@ -403,6 +403,26 @@ td.evmark{box-shadow:inset 0 0 0 2px #f59e0b}
 .pushbox label.row{gap:8px}
 .vwnote{font-size:12.5px;padding:8px 10px;border-radius:10px;background:var(--head);color:var(--mut)}
 .rmlist .mrow{padding:6px 2px}
+
+/* ===== Bố cục 4 cột & cột Trò chuyện ===== */
+.split4{grid-template-columns:290px minmax(0,1fr) 270px 270px}
+.split4 .rcol>.sumc{flex:1 1 0}
+@media (max-width:1500px){.split4{grid-template-columns:240px minmax(0,1fr) 240px 240px}}
+@media (max-width:1280px){.split4{grid-template-columns:210px minmax(0,1fr) 210px 210px}}
+@media (max-width:900px){.split4{grid-template-columns:1fr}}
+.feedgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;min-height:0}
+@media (min-width:901px) and (min-height:560px){.feedgrid{height:100%}.feedgrid>.feedwrap{height:100%;min-height:0}}
+@media (max-width:900px){.feedgrid{grid-template-columns:1fr}.people{height:480px}}
+.people{margin:0;min-height:0;overflow:hidden}
+.plist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.psec{font-size:12px;font-weight:700;color:var(--mut);margin:10px 2px 2px}
+.prow{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;cursor:pointer}
+.prow:hover{background:var(--head)}
+.prow .mn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pw{position:relative;flex:none;display:inline-flex}
+.odot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;border:2px solid var(--card);background:#9ca3af}
+.odot.on{background:var(--free)}
+.ubadge{display:inline-block;background:#ef4444;color:#fff;border-radius:9px;min-width:18px;height:18px;padding:0 5px;font:700 11px/18px inherit;font-style:normal;text-align:center}
 </style>
 </head>
 <body>
@@ -630,11 +650,11 @@ function bindNotes(){
 }
 function drawMe(){
   const w0=document.querySelector(".wrap"),st=w0?w0.scrollTop:0;
-  $("body").innerHTML=`<div class="split split3 big"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}${quickPanel()}
+  $("body").innerHTML=`<div class="split split4 big"><aside class="card side"><h2>Lịch cá nhân</h2>${noteSide()}${quickPanel()}
    <button class="p" id="sv">Lưu lịch cá nhân</button>
    <button id="ap" title="Sao chép lịch cá nhân sang nhóm bạn chọn">⤴ Áp dụng lịch cá nhân vào nhóm</button>
    <div class="tools"><button id="rp">🔁 Lặp lại</button><button id="an">📊 Phân tích</button><button id="rm">🔔 Nhắc lịch</button><button id="sh">🔗 Chia sẻ</button></div></aside>
-   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section><div class="rcol">${sumCard()}${noteCard()}${taskCard()}</div></div>`;
+   <section class="card pane"><div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}</section><div class="rcol">${sumCard()}${noteCard()}</div><div class="rcol">${taskCard()}</div></div>`;
   const w=document.querySelector(".wrap");if(w)w.scrollTop=st;
   bindNav();bindNotes();bindQuick();bindTasks();
   $("sv").onclick=()=>saveMe(false);$("ap").onclick=openApply;$("rp").onclick=openRepeat;$("an").onclick=openAnalytics;$("rm").onclick=openRemind;$("sh").onclick=openShare;
@@ -822,7 +842,7 @@ function drawTeam(){
   const w0=document.querySelector(".wrap,.polls,.agenda"),st=w0?w0.scrollTop:0,ntv=$("nt")?$("nt").value:null;
   const cl0=$("cl"),cNear=!cl0||cl0.scrollHeight-cl0.scrollTop-cl0.clientHeight<60,cTop=cl0?cl0.scrollTop:0,civ=$("ci")?$("ci").value:"",cif=!!document.activeElement&&document.activeElement.id==="ci";
   const done=members.filter(m=>m.done).length,all=members.length,allDone=all>0&&done===all,pct=all?Math.round(done/all*100):0,openP=polls.filter(x=>!pClosed(x)).length;
-  $("body").innerHTML=`<div class="split split3"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button><span class="sp"></span><button id="tx" class="dg" title="${isOwner()?"Xoá nhóm này":"Rời khỏi nhóm này"}">${isOwner()?"🗑️ Xoá nhóm":"🚪 Rời nhóm"}</button></div><h2>${isOwner()?"👑 ":""}${esc(team.name)}</h2>
+  $("body").innerHTML=`<div class="split ${tview==="res"?"split4":"split3"}"><aside class="card side"><div class="row"><button id="bk">← Nhóm</button><span class="sp"></span><button id="tx" class="dg" title="${isOwner()?"Xoá nhóm này":"Rời khỏi nhóm này"}">${isOwner()?"🗑️ Xoá nhóm":"🚪 Rời nhóm"}</button></div><h2>${isOwner()?"👑 ":""}${esc(team.name)}</h2>
    <div class="row">Mã: <span class="code">${esc(team.code)}</span><span class="sp"></span><button id="cp">Sao chép</button></div>
    <div class="mut">👑 Nhóm trưởng: <b>${esc(ownerName())}</b>${isOwner()?" (Bạn)":""} · Vai trò của bạn: <b>${ROLE_VI[myRole()]}</b></div>
    <button id="mb" class="mem-btn"><span>👥 Thành viên (${all})</span><small>${done}/${all} đã chốt</small></button><div class="bar"><i style="width:${pct}%"></i></div>
@@ -833,7 +853,7 @@ function drawTeam(){
    :tview==="vote"?`<p class="mut" style="margin:0">Tạo câu hỏi và các phương án để cả nhóm cùng bỏ phiếu. Bấm vào một phương án để vote, bấm lại để bỏ phiếu. Khi đóng, bình chọn được chuyển sang Lịch sử vote.</p><span class="sp"></span>${canEditTeam()?`<button class="p" id="pc">＋ Tạo bình chọn</button>`:viewerNote()}`
    :`<p class="mut" style="margin:0">${allDone?"✅ Mọi người đã chốt. Ô xanh lá = tất cả cùng rảnh.":"⏳ Mới "+done+"/"+all+" người chốt, kết quả tạm tính."} Ô xám có số = số người bận.</p>`}
    </aside>
-   <section class="card pane">${paneHtml()}</section><div class="rcol">${rightCards()}</div></div>`;
+   <section class="card pane">${paneHtml()}</section>${rightCols()}</div>`;
   const w=document.querySelector(".wrap,.polls,.agenda");if(w)w.scrollTop=st;
   if(tview!=="vote")bindNav();bindNavBtns();
   $("bk").onclick=async()=>{await flush();team=null;sel=new Set();listTeams()};
@@ -988,12 +1008,13 @@ document.addEventListener("keydown",e=>{const m=$("lb");if(!m||m.hidden||lb.l.le
 
 function postsView(){
   ctx={cell:()=>({cls:""})};
-  $("body").innerHTML=`<div class="feedwrap"><div class="fcol">
+  $("body").innerHTML=`<div class="feedgrid"><div class="feedwrap"><div class="fcol">
    <div class="card composer"><div class="row" style="align-items:flex-start;flex-wrap:nowrap;gap:10px"><i class="av">${avInner(avUrl(),uname())}</i><textarea id="pbx" rows="2" maxlength="5000" placeholder="Bạn đang nghĩ gì?"></textarea></div>
     <div class="pimgs" id="ppv"></div>
     <div class="tpx" id="tpx"><span class="mut">Chủ đề:</span>${TOPICS.map(t=>`<button type="button" class="tg" data-ins="#${t.replace(/\s+/g,"-")} ">#${t}</button>`).join("")}</div><div class="tpx" id="tmn"></div>
     <div class="row" style="margin-top:10px"><label class="filebtn" for="pfi">🖼️ Thêm ảnh</label><input type="file" id="pfi" accept="image/*" multiple hidden><button type="button" id="pcode" title="Chèn mã nhóm của bạn vào bài viết">🔑 Chèn mã nhóm</button>${meta().phone?`<button type="button" id="pph" title="Chèn số điện thoại trong hồ sơ">📞 Chèn SĐT</button>`:""}<span class="mut" id="pcn"></span><span class="sp"></span><button class="p" id="pgo2">Đăng bài</button></div></div>
-   <div id="plist"></div></div></div>`;
+   <div id="plist"></div></div></div>${peopleCard()}</div>`;
+  initPeople();
   const tx=$("pbx");tx.oninput=()=>{tx.style.height="auto";tx.style.height=Math.min(tx.scrollHeight+2,260)+"px"};
   $("pfi").onchange=async e=>{const fs=[...e.target.files];e.target.value="";
     for(const f of fs){if(pend.length>=MAXIMG){say("Tối đa "+MAXIMG+" ảnh mỗi bài.");break;}
@@ -1276,7 +1297,7 @@ async function saveProfile(){
     if(r.error)throw r.error;
     if(r.data&&r.data.user)user=r.data.user;
     const op=avPath(old);if(op&&old!==url)SB.storage.from(AVB).remove([op]).then(()=>{},()=>{});
-    paintWho();
+    paintWho();beat();
     const ca=document.querySelector(".composer .av");if(ca&&view==="posts")ca.innerHTML=avInner(avUrl(),uname());
     closeProfile();
     say(emailChanged?"✓ Đã lưu hồ sơ. Hãy mở email mới để xác nhận việc đổi email.":"✓ Đã lưu hồ sơ");
@@ -1487,6 +1508,7 @@ function paneHtml(){
   if(tview==="cal")return calPane();
   if(tview==="room")return roomPane();
   return `<div class="ptop">${navBar()}<span class="sp"></span>${legend()}</div>${grid(k=>ctx.cell(k))}`;}
+const rightCols=()=>tview==="res"?`<div class="rcol">${freeCard()}${chatCard()}</div><div class="rcol">${meetCard()}</div>`:`<div class="rcol">${rightCards()}</div>`;
 const rightCards=()=>chatCard()+(tview==="mine"?noteCard():tview==="res"?freeCard()+meetCard():tview==="cal"?taskCard():tview==="room"?bookCard():historyCard());
 const viewerNote=()=>canEditTeam()?"":`<div class="vwnote">👁️ Bạn có vai trò <b>Chỉ xem</b>: xem được lịch, trả lời lời mời, bình chọn và chat, nhưng không sửa được lịch bận, không tạo sự kiện, công việc, bình chọn hay đặt phòng.</div>`;
 
@@ -1948,6 +1970,95 @@ async function pushTest(){
 if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{
   if(e.data&&e.data.type==="push")say("🔔 "+e.data.title+(e.data.body?" · "+e.data.body:""));});
 
+/* ===================================================================
+   Cột "Trò chuyện" ở trang Bài viết: danh sách người dùng + đang hoạt động,
+   chat riêng 1-1 và chat nhóm. Cần chạy migrate_v4.sql.
+   =================================================================== */
+const ONLINE_MS=150000;
+let ppl={users:[],teams:[],unread:{},q:"",chat:null,msgs:[],err:null,loaded:false};
+const pOnline=u=>!!u.last_seen&&Date.now()-new Date(u.last_seen).getTime()<ONLINE_MS;
+const peopleCard=()=>`<aside class="card side people" id="ppl"></aside>`;
+async function beat(){if(!user||!SB)return;try{await SB.from("profiles").upsert({user_id:user.id,name:uname(),avatar_url:avUrl()||null,last_seen:new Date().toISOString()},{onConflict:"user_id"});}catch(e){}}
+function paintBadge(){const n=Object.values(ppl.unread).reduce((a,b)=>a+b,0),tp=$("tp");if(tp)tp.innerHTML="📰 Bài viết"+(n?` <i class="ubadge">${n>9?"9+":n}</i>`:"");}
+async function pollUnread(){if(!user||!SB)return;
+  const r=await SB.from("direct_messages").select("sender").eq("recipient",user.id).is("read_at",null).limit(500);if(r.error)return;
+  const u={};(r.data||[]).forEach(x=>u[x.sender]=(u[x.sender]||0)+1);ppl.unread=u;paintBadge();
+  if(view==="posts"&&!ppl.chat)renderPList();}
+setInterval(()=>{if(user&&document.visibilityState==="visible")beat();},60000);
+setInterval(()=>{if(user)pollUnread();},20000);
+setInterval(()=>{if(user&&view==="posts"&&ppl.chat)pollChatP();},3000);
+setInterval(()=>{if(user&&view==="posts"&&!ppl.chat&&document.visibilityState==="visible")loadPeople();},20000);
+document.addEventListener("visibilitychange",()=>{if(user&&document.visibilityState==="visible")beat();});
+
+function initPeople(){ppl.chat=null;paintPeople();loadPeople();pollUnread();}
+async function loadPeople(){
+  const[u,t]=await Promise.all([SB.from("profiles").select("user_id,name,avatar_url,last_seen").order("name").limit(500),SB.from("teams").select("id,name").order("created_at")]);
+  ppl.err=u.error?u.error.message:null;ppl.users=(u.data||[]).filter(x=>x.user_id!==user.id);ppl.teams=t.data||[];ppl.loaded=true;
+  if(view==="posts"&&$("ppl")&&!ppl.chat)renderPList();}
+function paintPeople(){const el=$("ppl");if(!el)return;ppl.chat?paintChat(el):paintList(el);}
+function paintList(el){
+  el.innerHTML=`<div class="row"><h2 style="margin:0">💬 Trò chuyện</h2><span class="sp"></span><span class="mut" id="pon"></span></div>
+   <input id="pq" placeholder="Tìm người dùng hoặc nhóm…" value="${esc(ppl.q)}" autocomplete="off"><div class="plist" id="pll"></div>`;
+  $("pq").oninput=e=>{ppl.q=e.target.value;renderPList();};
+  $("pll").onclick=ev=>{
+    const u=ev.target.closest("[data-u]");if(u){const x=ppl.users.find(z=>z.user_id===u.dataset.u);if(x)openChat({kind:"dm",id:x.user_id,name:x.name,avatar:x.avatar_url,online:pOnline(x)});return;}
+    const g=ev.target.closest("[data-g]");if(g){const x=ppl.teams.find(z=>z.id===g.dataset.g);if(x)openChat({kind:"team",id:x.id,name:x.name});}};
+  renderPList();}
+function renderPList(){const el=$("pll");if(!el)return;
+  if(ppl.err){el.innerHTML=`<div class="mut" style="padding:8px">⚠️ ${esc(dbErr({message:ppl.err}))}<br>Hãy chạy file <b>migrate_v4.sql</b> trong Supabase → SQL Editor.</div>`;return;}
+  if(!ppl.loaded){el.innerHTML="<div class='mut' style='padding:8px'>Đang tải…</div>";return;}
+  const q=ppl.q.trim().toLowerCase(),f=n=>!q||(n||"").toLowerCase().includes(q);
+  const us=ppl.users.filter(u=>f(u.name)),on=us.filter(pOnline),off=us.filter(u=>!pOnline(u)),ts=ppl.teams.filter(t=>f(t.name));
+  const badge=n=>n?`<i class="ubadge">${n>9?"9+":n}</i>`:"";
+  const row=u=>`<div class="prow" data-u="${u.user_id}"><span class="pw"><i class="av">${avInner(u.avatar_url,u.name)}</i><i class="odot ${pOnline(u)?"on":""}"></i></span><span class="mn">${esc(u.name||"Người dùng")}</span>${badge(ppl.unread[u.user_id])}</div>`;
+  const nOn=ppl.users.filter(pOnline).length;if($("pon"))$("pon").textContent="🟢 "+nOn+" đang hoạt động";
+  el.innerHTML=(ts.length?`<div class="psec">Nhóm của tôi</div>`+ts.map(t=>`<div class="prow" data-g="${t.id}"><span class="pw"><i class="av">👥</i></span><span class="mn">${esc(t.name)}</span><small class="mut">chat nhóm</small></div>`).join(""):"")
+   +`<div class="psec">Đang hoạt động (${on.length})</div>`+(on.length?on.map(row).join(""):"<div class='mut' style='padding:4px 8px'>Chưa có ai đang hoạt động.</div>")
+   +`<div class="psec">Ngoại tuyến (${off.length})</div>`+(off.length?off.slice(0,150).map(row).join(""):"<div class='mut' style='padding:4px 8px'>—</div>");}
+function paintChat(el){const c=ppl.chat;
+  el.innerHTML=`<div class="row" style="flex-wrap:nowrap"><button class="pa" id="pback" type="button" title="Quay lại danh sách">←</button>
+   <span class="pw">${c.kind==="dm"?`<i class="av">${avInner(c.avatar,c.name)}</i><i class="odot ${c.online?"on":""}"></i>`:`<i class="av">👥</i>`}</span>
+   <div class="sp" style="min-width:0"><b class="mn" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name||"Người dùng")}</b><span class="mut" style="font-size:12px">${c.kind==="team"?"Chat nhóm · mọi thành viên cùng thấy":c.online?"🟢 Đang hoạt động":"Ngoại tuyến"}</span></div></div>
+   <div class="cl" id="pcl"></div><div class="row cin"><input id="pci" class="sp" maxlength="500" placeholder="Nhập tin nhắn…" autocomplete="off"><button class="p" id="pcs" type="button">Gửi</button></div>`;
+  $("pback").onclick=()=>{ppl.chat=null;paintPeople();loadPeople();};
+  $("pcs").onclick=sendP;$("pci").onkeydown=e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();sendP();}};}
+async function fetchChat(since){
+  const c=ppl.chat,me=user.id;let q;
+  if(c.kind==="dm")q=SB.from("direct_messages").select("*").or("and(sender.eq."+me+",recipient.eq."+c.id+"),and(sender.eq."+c.id+",recipient.eq."+me+")");
+  else q=SB.from("team_messages").select("*").eq("team_id",c.id);
+  q=since?q.gte("created_at",since).order("created_at",{ascending:true}):q.order("created_at",{ascending:false});
+  const r=await q.limit(200);if(r.error){ppl.err=r.error.message;return null;}
+  const rows=since?(r.data||[]):(r.data||[]).slice().reverse();
+  return rows.map(m=>c.kind==="dm"?{id:m.id,uid:m.sender,name:m.sender_name,content:m.content,at:m.created_at}:{id:m.id,uid:m.user_id,name:m.user_name,content:m.content,at:m.created_at});}
+async function openChat(c){
+  ppl.chat=c;ppl.msgs=[];ppl.err=null;paintPeople();$("pcl").innerHTML="<div class='mut' style='padding:8px'>Đang tải…</div>";
+  const rows=await fetchChat();if(ppl.chat!==c)return;
+  if(rows===null){$("pcl").innerHTML=`<div class="mut" style="padding:8px">⚠️ ${esc(dbErr({message:ppl.err}))}</div>`;return;}
+  ppl.msgs=rows;renderMsgs(true);if(c.kind==="dm")markRead();if($("pci"))$("pci").focus();}
+async function markRead(){const c=ppl.chat;if(!c||c.kind!=="dm")return;
+  delete ppl.unread[c.id];paintBadge();
+  await SB.from("direct_messages").update({read_at:new Date().toISOString()}).eq("recipient",user.id).eq("sender",c.id).is("read_at",null);}
+async function pollChatP(){
+  const c=ppl.chat;if(!c)return;const last=ppl.msgs.length?ppl.msgs[ppl.msgs.length-1].at:null;
+  const rows=await fetchChat(last);if(!rows||ppl.chat!==c)return;
+  const seen=new Set(ppl.msgs.map(m=>m.id)),add=rows.filter(m=>!seen.has(m.id));if(!add.length)return;
+  ppl.msgs=ppl.msgs.concat(add).slice(-300);renderMsgs();
+  if(c.kind==="dm"&&add.some(m=>m.uid!==user.id))markRead();}
+function renderMsgs(stick){const el=$("pcl");if(!el)return;const c=ppl.chat,near=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+  let day="",h="";
+  ppl.msgs.forEach(m=>{const d=new Date(m.at),dl=dayLabel(d),mine=m.uid===user.id;
+    if(dl!==day){day=dl;h+=`<div class="cday">${esc(dl)}</div>`;}
+    h+=`<div class="cm ${mine?"me":""}"><div class="ch">${c.kind==="team"?`<b>${m.uid===(ppl.teams.find(t=>t.id===c.id)||{}).owner?"👑 ":""}${mine?"Bạn":esc(m.name)}</b> · `:""}<span title="${dmy(d)} ${hm(d)}">${hm(d)}</span></div><div class="cb">${esc(m.content)}</div></div>`;});
+  el.innerHTML=h||"<div class='mut' style='text-align:center;padding:12px'>Chưa có tin nhắn nào. Hãy gửi lời chào 👋</div>";
+  if(stick===true||near)el.scrollTop=el.scrollHeight;}
+async function sendP(){
+  const c=ppl.chat,i=$("pci");if(!c||!i)return;const t=i.value.trim();if(!t)return;i.value="";
+  const r=c.kind==="dm"?await SB.from("direct_messages").insert({sender:user.id,recipient:c.id,sender_name:uname(),content:t}).select().single()
+    :await SB.from("team_messages").insert({team_id:c.id,user_id:user.id,user_name:uname(),content:t}).select().single();
+  if(r.error){i.value=t;return say("Lỗi gửi tin: "+dbErr(r.error));}
+  const m=r.data;if(ppl.chat===c&&!ppl.msgs.find(x=>x.id===m.id)){ppl.msgs.push(c.kind==="dm"?{id:m.id,uid:m.sender,name:m.sender_name,content:m.content,at:m.created_at}:{id:m.id,uid:m.user_id,name:m.user_name,content:m.content,at:m.created_at});renderMsgs(true);}
+  if($("pci"))$("pci").focus();}
+
 /* ---------- vẽ lại theo ngữ cảnh ---------- */
 const _meView=meView,_drawMe=drawMe,_drawTeam=drawTeam;
 meView=async function(){setMeCtx();await _meView();};
@@ -1968,7 +2079,7 @@ function start(){
         user=session?session.user:null;
         $("out").hidden=!user;$("bell").hidden=!user;paintWho();
         if(!user){team=null;stopNotifs();stopRemind();authView();return;}
-        if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();initNotifs();initRemind();}
+        if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION"){shell();go();initNotifs();initRemind();beat();pollUnread();}
       }catch(e){showErr(e)}
     });
     setInterval(()=>{const a=document.activeElement;if(user&&view==="team"&&team&&drag===null&&!dirty&&!(a&&["ci","nt"].includes(a.id)&&a.value))loadTeam(false);},15000);
